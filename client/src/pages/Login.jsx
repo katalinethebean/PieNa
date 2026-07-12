@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, isConfigured } from '../lib/supabase';
+import TurnstileWidget, { TURNSTILE_SITE_KEY } from '../components/TurnstileWidget';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -11,6 +12,14 @@ export default function Login() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [form, setForm] = useState({ name: '', username: '', email: '', loginUsername: '', password: '' });
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+
+  // token 单次有效，验证失败后重置小组件让用户重新验证
+  function resetCaptcha() {
+    setCaptchaToken('');
+    setCaptchaResetKey(k => k + 1);
+  }
 
   function setField(k, v) {
     setForm(f => ({ ...f, [k]: v }));
@@ -34,6 +43,7 @@ export default function Login() {
     setLoading(true);
     setError('');
     if (!isConfigured) { navigate('/discover'); return; }
+    if (TURNSTILE_SITE_KEY && !captchaToken) { setError('请先完成人机验证'); setLoading(false); return; }
 
     let email = form.email;
 
@@ -50,9 +60,14 @@ export default function Login() {
       email = foundEmail;
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: form.password });
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: form.password,
+      options: { captchaToken: captchaToken || undefined },
+    });
     if (signInError) {
       setError('账号或密码不正确，请重试');
+      resetCaptcha();
       setLoading(false);
       return;
     }
@@ -66,6 +81,7 @@ export default function Login() {
     if (!/^[a-zA-Z0-9_]+$/.test(form.username)) { setError('用户名只能含英文字母、数字和下划线'); return; }
     if (!form.email.trim()) { setError('请输入邮箱'); return; }
     if (form.password.length < 6) { setError('密码至少需要 6 位'); return; }
+    if (TURNSTILE_SITE_KEY && !captchaToken) { setError('请先完成人机验证'); return; }
 
     setLoading(true);
     setError('');
@@ -85,9 +101,11 @@ export default function Login() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
+      options: { captchaToken: captchaToken || undefined },
     });
 
     if (signUpError) {
+      resetCaptcha();
       const msg = signUpError.message || '';
       if (msg.includes('already registered') || msg.includes('already been registered')) {
         setError('该邮箱已注册，请直接登录');
@@ -267,6 +285,8 @@ export default function Login() {
                   value={form.password} onChange={e => setField('password', e.target.value)}
                   required autoComplete={mode === 'register' ? 'new-password' : 'current-password'} />
               </div>
+
+              <TurnstileWidget onToken={setCaptchaToken} resetKey={captchaResetKey} />
 
               {error && (
                 <div style={{
