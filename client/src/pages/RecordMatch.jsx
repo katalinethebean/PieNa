@@ -279,7 +279,6 @@ export default function RecordMatch() {
         <div style={{ marginBottom: '28px' }}>
           <button type="button" onClick={() => navigate(-1)} style={{ fontSize: '12px', color: '#9a8570', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginBottom: '12px', display: 'block' }}>← 返回</button>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#2C3025', marginBottom: '4px' }}>记录比赛</h1>
-          <p style={{ fontSize: '13px', color: '#9a8570' }}>不需 AI 分析，直接记录比赛结果</p>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -297,7 +296,7 @@ export default function RecordMatch() {
               <input
                 value={form.tournament}
                 onChange={e => setForm(f => ({ ...f, tournament: e.target.value }))}
-                placeholder="如：香港中学辩论邀请赛 2026"
+                placeholder=""
                 style={inputStyle}
               />
             </div>
@@ -308,7 +307,7 @@ export default function RecordMatch() {
               <input
                 value={form.motion}
                 onChange={e => setForm(f => ({ ...f, motion: e.target.value }))}
-                placeholder="本院认为……"
+                placeholder=""
                 style={inputStyle}
                 required
               />
@@ -362,7 +361,7 @@ export default function RecordMatch() {
 
             {/* Debaters — my team's 4 */}
             <div>
-              <label style={labelStyle}>我方辩手（可输入姓名或 @ 搜索已注册用户，星标可多选标记本场佳辩）</label>
+              <label style={labelStyle}>我方辩手（输入用户名查找已注册的撇捺用户）</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {['一辩', '二辩', '三辩', '四辩'].map((pos, i) => (
                   <div key={i}>
@@ -393,7 +392,7 @@ export default function RecordMatch() {
               <textarea
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="补充说明（可选）"
+                placeholder=""
                 style={{ ...inputStyle, resize: 'none', height: '64px', lineHeight: 1.6 }}
               />
             </div>

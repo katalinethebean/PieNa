@@ -102,6 +102,7 @@ export function UserProvider({ children }) {
       spendCredit,
       name, setName,
       bio, setBio,
+      region, setRegion,
       team, setTeam,
       honors, setHonors,
       isPublic, setIsPublic,

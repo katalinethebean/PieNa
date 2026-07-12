@@ -133,22 +133,6 @@ export default function AnalysisOverlay() {
                       transition={{ duration: 0.8, ease: 'easeOut' }}
                     />
                   </div>
-                  {/* 阶段刻度 */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
-                    {['提取发言', '生成反馈', '专业评分', '完成'].map((s, i) => {
-                      const threshold = [8, 55, 92, 100][i];
-                      const reached = job.progress >= threshold;
-                      return (
-                        <span key={s} style={{
-                          fontSize: '10px', fontWeight: reached ? 700 : 400,
-                          color: reached ? '#5a8f7a' : '#b5a68e',
-                          transition: 'color 0.3s',
-                        }}>
-                          {reached ? '✓ ' : ''}{s}
-                        </span>
-                      );
-                    })}
-                  </div>
                 </div>
 
                 <p style={{ fontSize: '12px', color: '#9a8570', marginTop: '28px' }}>

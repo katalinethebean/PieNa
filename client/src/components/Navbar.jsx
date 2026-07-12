@@ -125,7 +125,7 @@ export default function Navbar() {
       </Link>
 
       {/* Nav tabs */}
-      <div style={{ display: 'flex', gap: '4px', flex: 1, justifyContent: 'center' }}>
+      <motion.div layoutRoot style={{ display: 'flex', gap: '4px', flex: 1, justifyContent: 'center' }}>
         {NAV.map(({ to, label, icon }) => {
           const active = pathname.startsWith(to);
           const showUnreadDot = to === '/chat' && totalUnread > 0;
@@ -180,7 +180,7 @@ export default function Navbar() {
             </Link>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* Right section: notification bell + profile avatar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, marginLeft: '40px' }}>

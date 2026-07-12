@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MOCK_UPCOMING_TOURNAMENTS, MOCK_DEBATERS } from '../lib/mockData';
+import { MOCK_UPCOMING_TOURNAMENTS } from '../lib/mockData';
 import { useAuth } from '../contexts/AuthContext';
 import { useFriend } from '../contexts/FriendContext';
 import { useUser } from '../contexts/UserContext';
 import { supabase, isConfigured } from '../lib/supabase';
 import LoginPromptModal from '../components/LoginPromptModal';
+import ConfirmModal from '../components/ConfirmModal';
 
 const spring = { type: 'spring', stiffness: 300, damping: 22 };
 
@@ -301,6 +302,7 @@ function MyRecruits({ refreshKey, onPostChange }) {
   const { id: selfId } = useUser();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const load = () => {
     if (!selfId) return;
@@ -322,9 +324,9 @@ function MyRecruits({ refreshKey, onPostChange }) {
   };
 
   const deletePost = async (id) => {
-    if (!window.confirm('确认删除这条招募帖吗？删除后无法恢复。')) return;
     await supabase.from('recruit_posts').delete().eq('id', id);
     setPosts(ps => ps.filter(p => p.id !== id));
+    setConfirmDeleteId(null);
     onPostChange?.();
   };
 
@@ -333,6 +335,17 @@ function MyRecruits({ refreshKey, onPostChange }) {
   const sorted = [...posts].sort((a, b) => (a.archived === b.archived ? 0 : a.archived ? 1 : -1));
 
   return (
+    <>
+    {confirmDeleteId && (
+      <ConfirmModal
+        title="删除招募帖"
+        message="确定要删除这条招募帖吗？删除后无法恢复。"
+        confirmLabel="删除"
+        danger
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => deletePost(confirmDeleteId)}
+      />
+    )}
     <div className="glass-card" style={{ padding: '20px', marginTop: '12px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <p style={{ fontSize: '12px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.1em', marginBottom: '16px', flexShrink: 0 }}>我的招募</p>
       {loading ? (
@@ -379,7 +392,7 @@ function MyRecruits({ refreshKey, onPostChange }) {
                     </svg>
                   </motion.button>
                   <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
-                    onClick={() => deletePost(p.id)}
+                    onClick={() => setConfirmDeleteId(p.id)}
                     title="删除"
                     style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(160,48,48,0.08)', border: '1px solid rgba(160,48,48,0.25)', borderRadius: '7px', cursor: 'pointer', color: '#a03030', padding: 0 }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -393,6 +406,7 @@ function MyRecruits({ refreshKey, onPostChange }) {
         </div>
       )}
     </div>
+    </>
   );
 }
 

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useReviewJob } from '../contexts/ReviewJobContext';
+import ConfirmModal from '../components/ConfirmModal';
 
 const POSITIONS = [
   '正方一辩', '正方二辩', '正方三辩', '正方四辩',
@@ -92,12 +93,14 @@ function ScoreRow({ full, score, notes, index }) {
 }
 
 function ResultCard({ session, onDelete }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const scores = session.scores || {};
   const radarData = SCORE_META.map(m => ({ subject: m.label, score: scores[m.key] ?? 0, fullMark: 10 }));
 
   const avg = session.overall_average ?? 0;
   const date = new Date(session.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const displayLabel = session.justification?.note || session.position || '（无备注）';
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -107,6 +110,17 @@ function ResultCard({ session, onDelete }) {
   };
 
   return (
+    <>
+      {confirmDelete && (
+        <ConfirmModal
+          title="删除复盘记录"
+          message="确定要删除这条复盘记录吗？此操作无法撤销。"
+          confirmLabel="删除"
+          danger
+          onCancel={() => setConfirmDelete(false)}
+          onConfirm={handleDelete}
+        />
+      )}
     <motion.div
       layout
       initial={{ opacity: 0, y: 8 }}
@@ -117,14 +131,14 @@ function ResultCard({ session, onDelete }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
         <div>
-          <p style={{ fontSize: '13px', fontWeight: 700, color: '#2C3025', marginBottom: '2px' }}>{session.motion}</p>
+          <p style={{ fontSize: '13px', fontWeight: 700, color: '#2C3025', marginBottom: '2px' }}>{displayLabel}</p>
           <p style={{ fontSize: '11px', color: '#9a8570' }}>{session.position} · {date}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
           <span style={{ fontSize: '24px', fontWeight: 800, color: scoreColor(avg), fontVariantNumeric: 'tabular-nums' }}>
             {avg.toFixed(2)}
           </span>
-          <button onClick={handleDelete} disabled={deleting} style={{
+          <button onClick={() => setConfirmDelete(true)} disabled={deleting} style={{
             background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(160,48,48,0.5)',
             padding: '4px', display: 'flex', alignItems: 'center',
           }}>
@@ -144,6 +158,7 @@ function ResultCard({ session, onDelete }) {
         </RadarChart>
       </ResponsiveContainer>
     </motion.div>
+    </>
   );
 }
 
@@ -221,6 +236,8 @@ export default function Review() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [notePrompt, setNotePrompt] = useState(false);
+  const [noteDraft, setNoteDraft] = useState('');
   const printRef = useRef(null);
   const navigate = useNavigate();
 
@@ -249,8 +266,15 @@ export default function Review() {
     navigate('/discover');
   };
 
-  const handleSave = async () => {
+  const handleSaveClick = () => {
     if (!result) return;
+    setNoteDraft('');
+    setNotePrompt(true);
+  };
+
+  const handleSave = async (note) => {
+    if (!result) return;
+    setNotePrompt(false);
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     const scores = {};
@@ -262,6 +286,7 @@ export default function Review() {
       overall_average: result.overall,
       scores,
       justification: {
+        note: note.trim() || null,
         feedback_summary: result.feedback_summary,
         feedback_fluency: result.feedback_fluency,
         feedback_originality: result.feedback_originality,
@@ -295,6 +320,35 @@ export default function Review() {
   // ── 任务界面（结果 / 错误；运行中的进度由全局 AnalysisOverlay 显示）──
   if (job && job.kind === 'review' && job.status !== 'running') {
     return (
+      <>
+      {notePrompt && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(44,48,37,0.5)', backdropFilter: 'blur(4px)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            style={{ width: '100%', maxWidth: '380px', background: '#F2EDE4', borderRadius: '16px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', margin: 0 }}>保存前请输入备注</h3>
+            <p style={{ fontSize: '13px', color: '#7d6b55', margin: 0 }}>备注将作为历史记录中的显示标题（可留空）</p>
+            <input
+              autoFocus
+              value={noteDraft}
+              onChange={e => setNoteDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSave(noteDraft); if (e.key === 'Escape') setNotePrompt(false); }}
+              placeholder="如：2026港辩决赛 反方三辩"
+              maxLength={60}
+              style={{ padding: '10px 14px', border: '1px solid rgba(200,184,154,0.6)', borderRadius: '8px', fontSize: '14px', color: '#2C3025', background: 'rgba(255,255,255,0.7)', outline: 'none', fontFamily: 'inherit' }}
+            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => handleSave(noteDraft)}
+                style={{ flex: 1, padding: '10px', background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                保存
+              </button>
+              <button onClick={() => setNotePrompt(false)}
+                style={{ padding: '10px 16px', background: 'transparent', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '10px', fontSize: '13px', color: '#9a8570', cursor: 'pointer', fontFamily: 'inherit' }}>
+                取消
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
       <div style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 20px 80px' }}>
         {/* 顶栏：返回 + 最小化 */}
         <motion.div
@@ -448,7 +502,7 @@ export default function Review() {
                   删除记录
                 </motion.button>
               ) : (
-                <motion.button onClick={handleSave} disabled={saving} whileHover={!saving ? { opacity: 0.8 } : {}} whileTap={!saving ? { scale: 0.97 } : {}}
+                <motion.button onClick={handleSaveClick} disabled={saving} whileHover={!saving ? { opacity: 0.8 } : {}} whileTap={!saving ? { scale: 0.97 } : {}}
                   style={{ ...btnBase, background: 'rgba(90,143,122,0.1)', color: '#5a8f7a', borderColor: 'rgba(90,143,122,0.35)', cursor: saving ? 'not-allowed' : 'pointer' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
@@ -476,6 +530,7 @@ export default function Review() {
           }
         `}</style>
       </div>
+      </>
     );
   }
 
@@ -490,9 +545,6 @@ export default function Review() {
       >
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#2C3025', marginBottom: '6px' }}>复盘分析</h1>
-          <p style={{ fontSize: '13px', color: '#9a8570', lineHeight: 1.6, margin: 0 }}>
-            粘贴你的发言或完整逐字稿，AI 将自动提取你的部分并评分。
-          </p>
         </div>
         <motion.button
           onClick={() => setShowHistory(true)}
@@ -523,22 +575,22 @@ export default function Review() {
         <div style={{ marginBottom: '20px' }}>
           <label style={labelStyle}>辩题 *</label>
           <input type="text" value={debateMotion} onChange={e => setDebateMotion(e.target.value)}
-            placeholder="例：人工智能的发展利大于弊" style={inputStyle} />
+            placeholder="" style={inputStyle} />
         </div>
 
         <div style={{ marginBottom: '20px' }}>
           <label style={labelStyle}>
-            发言内容 * <span style={{ fontWeight: 400, color: '#9a8570' }}>（粘贴你的发言，或包含多人的完整逐字稿）</span>
+            发言内容 *
           </label>
           <textarea value={text} onChange={e => setText(e.target.value)}
-            placeholder={'粘贴发言内容…\n\n如为完整逐字稿，请包含主席词如"接下来有请反方二辩发言"，系统将自动提取你的部分。'}
+            placeholder="黏贴文字转录或稿件原文"
             rows={10} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }} />
         </div>
 
         <div style={{ marginBottom: '24px' }}>
-          <label style={labelStyle}>补充信息 <span style={{ fontWeight: 400, color: '#9a8570' }}>（可选）</span></label>
+          <label style={labelStyle}>详细提示词/问题 <span style={{ fontWeight: 400, color: '#9a8570' }}>（可选）</span></label>
           <textarea value={context} onChange={e => setContext(e.target.value)}
-            placeholder="辩题背景、评委偏好、比赛赛制说明等…"
+            placeholder="详细提示词/问题"
             rows={3} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }} />
         </div>
 

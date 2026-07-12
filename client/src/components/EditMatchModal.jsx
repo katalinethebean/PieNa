@@ -1,8 +1,67 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useUser } from '../contexts/UserContext';
+import { useFriend } from '../contexts/FriendContext';
 import { sendMatchInvites } from '../lib/utils';
+
+function DebaterSearch({ value, onChange, placeholder, selfUser, inputStyle }) {
+  const [focused, setFocused] = useState(false);
+  const { friends } = useFriend();
+  const [friendProfiles, setFriendProfiles] = useState([]);
+
+  useEffect(() => {
+    if (!friends || friends.length === 0) { setFriendProfiles([]); return; }
+    supabase.from('profiles').select('id, name, username, team').in('id', friends)
+      .then(({ data }) => setFriendProfiles(data || []));
+  }, [friends]);
+
+  const allSearchable = [
+    { id: selfUser.id, name: selfUser.name, username: selfUser.username, team: selfUser.team, isSelf: true },
+    ...friendProfiles,
+  ];
+
+  const query = value && !value.startsWith('@') ? value : '';
+  const suggestions = query.length > 0
+    ? allSearchable.filter(d => d.name.includes(query) || d.username.includes(query)).slice(0, 5)
+    : [];
+
+  const handleSelect = (d) => {
+    onChange(`@${d.username}  ${d.name}${d.isSelf ? '（我）' : d.team ? `  (${d.team})` : ''}`);
+    setFocused(false);
+  };
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <input value={value} onChange={e => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setTimeout(() => setFocused(false), 150)}
+        placeholder={placeholder} style={inputStyle} autoComplete="off" />
+      <AnimatePresence>
+        {focused && suggestions.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'rgba(248,244,238,0.98)', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '10px', zIndex: 50, overflow: 'hidden', boxShadow: '0 8px 24px rgba(44,48,37,0.12)' }}>
+            {suggestions.map(d => (
+              <div key={d.id} onMouseDown={() => handleSelect(d)}
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(200,184,154,0.15)' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(200,184,154,0.15)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(44,48,37,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#2C3025', flexShrink: 0 }}>
+                  {d.name.slice(0, 1)}
+                </div>
+                <div>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#2C3025' }}>{d.name}{d.isSelf && <span style={{ fontSize: '10px', color: '#7d9b96', marginLeft: '4px' }}>（我）</span>}</p>
+                  <p style={{ fontSize: '10px', color: '#9a8570' }}>@{d.username}{d.team ? ` · ${d.team}` : ''}</p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const overlayStyle = {
   position: 'fixed', inset: 0, backgroundColor: 'rgba(44,48,37,0.5)',
@@ -11,7 +70,8 @@ const overlayStyle = {
 };
 
 export default function EditMatchModal({ session, onClose, onSaved }) {
-  const { id: selfId, username: selfUsername } = useUser();
+  const { id: selfId, name: selfName, username: selfUsername, team: selfTeam } = useUser();
+  const selfUser = { id: selfId, name: selfName, username: selfUsername, team: selfTeam };
   const [form, setForm] = useState({
     tournament: session.tournament || '',
     motion: session.motion || '',
@@ -96,16 +156,23 @@ export default function EditMatchModal({ session, onClose, onSaved }) {
           </div>
         </div>
         <div>
-          <label style={labelStyle}>上场辩手（@username 姓名，可标记佳辩）</label>
+          <label style={labelStyle}>上场辩手（输入用户名查找已注册的撇捺用户）</label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {['一辩', '二辩', '三辩', '四辩'].map((pos, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input style={{ ...inputStyle, fontSize: '13px' }} placeholder={pos} value={form.debaters[i] || ''}
-                  onChange={e => setForm(f => {
-                    const d = [...f.debaters]; d[i] = e.target.value;
-                    const mvpFlags = [...f.mvpFlags]; if (!e.target.value) mvpFlags[i] = false;
-                    return { ...f, debaters: d, mvpFlags };
-                  })} />
+                <div style={{ flex: 1 }}>
+                  <DebaterSearch
+                    value={form.debaters[i] || ''}
+                    onChange={v => setForm(f => {
+                      const d = [...f.debaters]; d[i] = v;
+                      const mvpFlags = [...f.mvpFlags]; if (!v) mvpFlags[i] = false;
+                      return { ...f, debaters: d, mvpFlags };
+                    })}
+                    placeholder={pos}
+                    selfUser={selfUser}
+                    inputStyle={{ ...inputStyle, fontSize: '13px' }}
+                  />
+                </div>
                 <button type="button" title="佳辩" disabled={!form.debaters[i]}
                   onClick={() => setForm(f => { const m = [...f.mvpFlags]; m[i] = !m[i]; return { ...f, mvpFlags: m }; })}
                   style={{ flexShrink: 0, width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: form.mvpFlags[i] ? 'rgba(192,122,58,0.12)' : 'transparent', border: `1px solid ${form.mvpFlags[i] ? 'rgba(192,122,58,0.5)' : 'rgba(200,184,154,0.5)'}`, borderRadius: '8px', cursor: form.debaters[i] ? 'pointer' : 'not-allowed', opacity: form.debaters[i] ? 1 : 0.35 }}>

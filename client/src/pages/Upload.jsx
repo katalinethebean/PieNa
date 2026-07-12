@@ -410,10 +410,10 @@ export default function Upload() {
               <div>
                 <label style={labelStyle}>
                   发言内容 <span style={{ color: '#a03030' }}>*</span>
-                  <span style={{ fontWeight: 400, color: '#9a8570', marginLeft: '6px' }}>（粘贴你的发言，或包含多人的完整逐字稿）</span>
+                  <span style={{ fontWeight: 400, color: '#9a8570', marginLeft: '6px' }}>（粘贴文字转录或稿件原文）</span>
                 </label>
                 <textarea value={transcript} onChange={e => setTranscript(e.target.value)}
-                  placeholder={'粘贴发言内容…\n\n如为完整逐字稿，请包含主席词如"接下来有请反方二辩发言"，系统将自动提取你的部分。'}
+                  placeholder="黏贴文字转录或稿件原文"
                   rows={8} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }} />
               </div>
             )}
@@ -422,7 +422,7 @@ export default function Upload() {
               <div>
                 <label style={labelStyle}>补充信息 <span style={{ fontWeight: 400, color: '#9a8570' }}>（可选）</span></label>
                 <textarea value={aiContext} onChange={e => setAiContext(e.target.value)}
-                  placeholder="评委偏好、赛制说明、比赛背景等…"
+                  placeholder="详细提示词/问题"
                   rows={2} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }} />
               </div>
             )}
@@ -441,7 +441,7 @@ export default function Upload() {
               <input
                 value={form.tournament}
                 onChange={e => setForm(f => ({ ...f, tournament: e.target.value }))}
-                placeholder="如：香港中学辩论邀请赛 2026"
+                placeholder=""
                 style={inputStyle}
               />
             </div>
@@ -449,7 +449,7 @@ export default function Upload() {
             {/* Motion */}
             <div>
               <label style={labelStyle}>辩题</label>
-              <input style={inputStyle} placeholder="例：本院认为人工智能弊大于利" value={form.motionText} onChange={e => setForm(f => ({ ...f, motionText: e.target.value }))} />
+              <input style={inputStyle} placeholder="" value={form.motionText} onChange={e => setForm(f => ({ ...f, motionText: e.target.value }))} />
             </div>
 
             {/* Side */}
@@ -483,7 +483,7 @@ export default function Upload() {
 
             {/* Debaters — my team's 4 */}
             <div>
-              <label style={labelStyle}>我方辩手（可输入姓名或 @ 搜索已注册用户，星标可多选标记本场佳辩）</label>
+              <label style={labelStyle}>我方辩手（输入用户名查找已注册的撇捺用户）</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {SLOT_LABELS.map((pos, i) => (
                   <div key={i}>
@@ -514,7 +514,7 @@ export default function Upload() {
               <textarea
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="补充说明（可选）"
+                placeholder=""
                 style={{ ...inputStyle, resize: 'none', height: '64px', lineHeight: 1.6 }}
               />
             </div>
@@ -536,9 +536,6 @@ export default function Upload() {
                   {loading ? 'AI 分析中…' : '开始分析'}
                 </motion.button>
 
-                <p style={{ textAlign: 'center', fontSize: '12px', color: '#9a8570', lineHeight: '1.7', letterSpacing: '0.02em' }}>
-                  分析结果将计入你的比赛档案<br />逐字稿内容不会被保存
-                </p>
               </>
             )}
           </form>

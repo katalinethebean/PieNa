@@ -349,6 +349,7 @@ export default function Profile({ self }) {
   const [draftName, setDraftName] = useState('');
   const [draftBio, setDraftBio] = useState('');
   const [draftTeam, setDraftTeam] = useState('');
+  const [draftRegion, setDraftRegion] = useState('');
   const [draftHonors, setDraftHonors] = useState(['', '', '', '', '']);
   const [showSettings, setShowSettings] = useState(false);
   const [showFriends, setShowFriends] = useState(false);
@@ -386,6 +387,7 @@ export default function Profile({ self }) {
     setDraftName(user.name);
     setDraftBio(user.bio);
     setDraftTeam(user.team);
+    setDraftRegion(user.region || '');
     setDraftHonors([...user.honors]);
     setEditing(true);
   }
@@ -394,6 +396,7 @@ export default function Profile({ self }) {
     user.setName(draftName);
     user.setBio(draftBio);
     user.setTeam(draftTeam);
+    user.setRegion(draftRegion);
     user.setHonors(draftHonors);
     if (isConfigured && user.id) {
       if (draftTeam) {
@@ -403,6 +406,7 @@ export default function Profile({ self }) {
         name: draftName,
         bio: draftBio,
         team: draftTeam,
+        region: draftRegion,
         honors: draftHonors.filter(h => h),
       }).eq('id', user.id);
     }
@@ -561,9 +565,21 @@ export default function Profile({ self }) {
                     <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>姓名</label>
                     <input style={inputStyle} value={draftName} onChange={e => setDraftName(e.target.value)} />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>主队（学校 / 俱乐部 / 机构）</label>
-                    <TeamPicker style={inputStyle} value={draftTeam} onChange={setDraftTeam} placeholder="如：拔萃学院辩论学会" />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>主队（学校 / 俱乐部 / 机构）</label>
+                      <TeamPicker style={inputStyle} value={draftTeam} onChange={setDraftTeam} placeholder="如：拔萃学院辩论学会" />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>地区</label>
+                      <select value={draftRegion} onChange={e => setDraftRegion(e.target.value)}
+                        style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}>
+                        <option value="">请选择…</option>
+                        {['北京','天津','上海','重庆','河北','山西','辽宁','吉林','黑龙江','江苏','浙江','安徽','福建','江西','山东','河南','湖北','湖南','广东','海南','四川','贵州','云南','陕西','甘肃','青海','内蒙古','广西','西藏','宁夏','新疆','香港','澳门','台湾','海外'].map(r => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>个人简介</label>
@@ -588,12 +604,28 @@ export default function Profile({ self }) {
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '6px', letterSpacing: '0.06em' }}>荣誉（最多 5 项）</label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', letterSpacing: '0.06em' }}>荣誉（最多 5 项）</label>
+                      {draftHonors.length < 5 && (
+                        <button type="button"
+                          onClick={() => setDraftHonors(h => [...h, ''])}
+                          style={{ fontSize: '11px', color: '#7d9b96', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+                          + 添加荣誉
+                        </button>
+                      )}
+                    </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {draftHonors.map((h, i) => (
-                        <input key={i} style={{ ...inputStyle, fontSize: '13px' }} value={h}
-                          onChange={e => { const n = [...draftHonors]; n[i] = e.target.value; setDraftHonors(n); }}
-                          placeholder={`荣誉 ${i + 1}`} />
+                        <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <input style={{ ...inputStyle, fontSize: '13px', flex: 1 }} value={h}
+                            onChange={e => { const n = [...draftHonors]; n[i] = e.target.value; setDraftHonors(n); }}
+                            placeholder={`荣誉 ${i + 1}`} />
+                          <button type="button"
+                            onClick={() => setDraftHonors(h => h.filter((_, j) => j !== i))}
+                            style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', color: '#c8b89a', padding: '4px', fontSize: '16px', lineHeight: 1 }}>
+                            ×
+                          </button>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -697,7 +729,7 @@ export default function Profile({ self }) {
                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(44,48,37,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9a8570" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
                   </div>
-                  <span style={{ fontSize: '12px', color: '#6b5c45', fontWeight: 600 }}>上传录音 · AI 分析</span>
+                  <span style={{ fontSize: '12px', color: '#6b5c45', fontWeight: 600 }}>分析比赛</span>
                 </motion.div>
               </Link>
               <Link to="/record" style={{ textDecoration: 'none', flex: 1 }}>
@@ -706,7 +738,7 @@ export default function Profile({ self }) {
                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(44,48,37,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9a8570" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </div>
-                  <span style={{ fontSize: '12px', color: '#6b5c45', fontWeight: 600 }}>记录比赛（无AI）</span>
+                  <span style={{ fontSize: '12px', color: '#6b5c45', fontWeight: 600 }}>记录比赛</span>
                 </motion.div>
               </Link>
             </div>

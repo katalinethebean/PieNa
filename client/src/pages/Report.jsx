@@ -216,7 +216,6 @@ export default function Report() {
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#2C3025', lineHeight: 1.45, letterSpacing: '0.01em', marginBottom: '14px' }}>{s.motion}</h1>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {s.tournament && <span style={pillStyle}>{s.tournament}</span>}
-            {s.role && <span style={pillStyle}>{s.role}</span>}
             {s.side && <span style={pillStyle}>{s.side}</span>}
             {formatChineseDate(s.date) && <span style={pillStyle}>{formatChineseDate(s.date)}</span>}
             {s.score && (

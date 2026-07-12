@@ -232,6 +232,7 @@ function ChatThread({ otherId }) {
   const [otherProfile, setOtherProfile] = useState(null);
   const [draft, setDraft] = useState('');
   const [sendError, setSendError] = useState('');
+  const composingRef = useRef(false);
   const bottomRef = useRef(null);
 
   const isFriend = friends.includes(otherId);
@@ -385,7 +386,9 @@ function ChatThread({ otherId }) {
             <input
               value={draft}
               onChange={e => setDraft(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+              onCompositionStart={() => { composingRef.current = true; }}
+              onCompositionEnd={() => { composingRef.current = false; }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !composingRef.current) { e.preventDefault(); handleSend(); } }}
               placeholder="输入消息…"
               maxLength={2000}
               style={{
@@ -428,8 +431,7 @@ export default function Chat() {
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {conversations.length === 0 && (
               <div style={{ padding: '24px 20px', textAlign: 'center' }}>
-                <p style={{ fontSize: '12px', color: '#c8b89a', marginBottom: '10px' }}>还没有私信</p>
-                <Link to="/network" style={{ fontSize: '12px', color: '#7d9b96', textDecoration: 'underline' }}>去关系网找好友聊聊吧</Link>
+                <p style={{ fontSize: '12px', color: '#c8b89a' }}>好没有聊天哦</p>
               </div>
             )}
             {conversations.map(c => (
