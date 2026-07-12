@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-ink:              #2C3025;
+  --color-ink-mid:          #4a4b3a;
+  --color-ink-light:        #6b5c45;
+  --color-parchment:        #E8E4DC;
+  --color-parchment-light:  #f0ece4;
+  --color-parchment-dark:   #d4cfc6;
+  --color-sage:             #a4b9b5;
+  --color-sage-dark:        #7d9b96;
+  --color-sage-muted:       #d4e5e2;
+  --color-border:           #c8b89a;
+  --color-border-dark:      #a8977c;
+  --color-text-primary:     #2C3025;
+  --color-text-secondary:   #6b5c45;
+  --color-text-muted:       #9a8570;
+  --color-success:          #5a8f7a;
+  --color-warning:          #c07a3a;
+  --color-error:            #a03030;
+
+  --font-sans: "Noto Serif SC", "Source Han Serif SC", "思源宋体", "宋体", "SimSun", "STSong", Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Hide scrollbars globally */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; -ms-overflow-style: none; }
+
+body {
+  font-family: var(--font-sans);
+  background-color: #E8E4DC;
+  color: #2C3025;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Glass system ─────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(44,48,37,0.03),
+    0 4px 12px rgba(44,48,37,0.05),
+    0 16px 40px rgba(44,48,37,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.55);
+}
+
+.dark-glass-card {
+  background: rgba(44, 48, 37, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.08),
+    0 8px 24px rgba(0,0,0,0.18),
+    0 32px 64px rgba(0,0,0,0.14);
+}
+
+/* Fallbacks for no backdrop-filter support */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-card {
+    background: rgba(248, 245, 240, 0.96);
+  }
+  .dark-glass-card {
+    background: #2C3025;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass-card {
+    background: rgba(248, 245, 240, 0.96);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .dark-glass-card {
+    background: #2C3025;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ── Shimmer button ───────────────────────────────── */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.18),
+    transparent
+  );
+  pointer-events: none;
+  transform: skewX(-15deg);
+}
+
+.btn-shimmer:hover::after {
+  animation: shimmer 0.65s ease forwards;
+}
+
+/* ── Animations ───────────────────────────────────── */
+@keyframes shimmer {
+  0%   { left: -60%; }
+  100% { left: 140%; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Scrollbar ────────────────────────────────────── */
+::-webkit-scrollbar         { width: 5px; }
+::-webkit-scrollbar-track   { background: #d4cfc6; }
+::-webkit-scrollbar-thumb   { background: #a4b9b5; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #7d9b96; }
