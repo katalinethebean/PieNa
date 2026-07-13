@@ -149,7 +149,7 @@ export default function Login() {
     if (data.session) {
       navigate('/discover');
     } else {
-      setSuccess('注册成功！我们已向你的邮箱发送了一封验证邮件，请点击其中的链接完成验证后再登录。');
+      setSuccess('注册成功！小撇已向你发出验证信息，请在邮箱中点击链接完成验证。注意查看垃圾邮件。');
       setLoading(false);
       setMode('login');
     }
