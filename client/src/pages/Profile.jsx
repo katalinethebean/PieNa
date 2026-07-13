@@ -63,10 +63,13 @@ function avgByDimension(sessions) {
 function FriendButton({ id }) {
   const { friends, sentRequests, receivedRequests, sendRequest, cancelRequest, acceptRequest, unfriend } = useFriend();
   const [confirmingUnfriend, setConfirmingUnfriend] = useState(false);
+  const [greetingOpen, setGreetingOpen] = useState(false);
+  const [greetingDraft, setGreetingDraft] = useState('');
   const isFriend = friends.includes(id);
   const hasSent = sentRequests.includes(id);
   const hasReceived = receivedRequests.includes(id);
   const btnBase = { padding: '8px 18px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em', fontWeight: 600, border: 'none' };
+  const inputSt = { padding: '7px 11px', border: '1px solid rgba(200,184,154,0.6)', borderRadius: '8px', fontSize: '12px', color: '#2C3025', background: 'rgba(255,255,255,0.6)', outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' };
   if (isFriend) return (
     <>
       <motion.button whileTap={{ scale: 0.96 }} onClick={() => setConfirmingUnfriend(true)}
@@ -97,22 +100,52 @@ function FriendButton({ id }) {
       接受好友请求
     </motion.button>
   );
-  return (
-    <motion.button whileTap={{ scale: 0.96 }} onClick={() => sendRequest(id)}
+  if (!greetingOpen) return (
+    <motion.button whileTap={{ scale: 0.96 }} onClick={() => { setGreetingOpen(true); setGreetingDraft(''); }}
       style={{ ...btnBase, background: '#2C3025', color: '#E8E4DC' }}>
       + 加为好友
     </motion.button>
+  );
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '220px' }}>
+      <input autoFocus value={greetingDraft} onChange={e => setGreetingDraft(e.target.value.slice(0, 20))}
+        placeholder="打个招呼吧（可选，20字内）" style={inputSt}
+        onKeyDown={e => { if (e.key === 'Enter') { sendRequest(id, greetingDraft); setGreetingOpen(false); } if (e.key === 'Escape') setGreetingOpen(false); }} />
+      <div style={{ display: 'flex', gap: '6px' }}>
+        <motion.button whileTap={{ scale: 0.96 }}
+          onClick={() => { sendRequest(id, greetingDraft); setGreetingOpen(false); }}
+          style={{ ...btnBase, padding: '7px 14px', background: '#2C3025', color: '#E8E4DC' }}>发送请求</motion.button>
+        <motion.button whileTap={{ scale: 0.96 }} onClick={() => setGreetingOpen(false)}
+          style={{ ...btnBase, padding: '7px 14px', background: 'transparent', border: '1px solid rgba(200,184,154,0.5)', color: '#9a8570' }}>取消</motion.button>
+      </div>
+    </div>
   );
 }
 
 // ── Settings Modal ────────────────────────────────────────────────────────────
 function SettingsModal({ user, onClose, navigate }) {
   const [email, setEmail] = useState('');
+  const [newUsername, setNewUsername] = useState('');
   const [wechat, setWechat] = useState(user.wechat || '');
   const [isPublic, setIsPublic] = useState(user.isPublic);
   const [msg, setMsg] = useState({});
   const [deleteStep, setDeleteStep] = useState(0);
   const [busy, setBusy] = useState('');
+
+  async function changeUsername() {
+    const trimmed = newUsername.trim().toLowerCase();
+    if (!trimmed) return;
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) { setMsg(m => ({ ...m, username: '用户名只能含英文字母、数字和下划线' })); return; }
+    setBusy('username');
+    const { data: available } = await supabase.rpc('is_username_available', { p_username: trimmed });
+    if (!available) { setMsg(m => ({ ...m, username: '该用户名已被使用，请换一个' })); setBusy(''); return; }
+    const { error } = await supabase.from('profiles').update({ username: trimmed }).eq('id', user.id);
+    setBusy('');
+    if (error) { setMsg(m => ({ ...m, username: '修改失败：' + error.message })); return; }
+    user.setUsername?.(trimmed);
+    setMsg(m => ({ ...m, username: '用户名已更新' }));
+    setNewUsername('');
+  }
 
   async function changeEmail() {
     if (!email.trim()) return;
@@ -188,6 +221,18 @@ function SettingsModal({ user, onClose, navigate }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', margin: 0 }}>设置</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a8570', fontSize: '18px', lineHeight: 1, padding: '2px 6px' }}>×</button>
+        </div>
+
+        {/* Username */}
+        <div style={rowStyle}>
+          <span style={labelStyle}>更改用户名</span>
+          <p style={{ fontSize: '11px', color: '#9a8570', margin: 0 }}>当前：@{user.username}</p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input style={inputStyle} placeholder="新用户名（英文、数字、下划线）" value={newUsername}
+              onChange={e => { setNewUsername(e.target.value); setMsg(m => ({ ...m, username: '' })); }} />
+            {saveBtn('确认修改', changeUsername, busy === 'username')}
+          </div>
+          {msg.username && <span style={feedbackStyle(msg.username === '用户名已更新')}>{msg.username}</span>}
         </div>
 
         {/* Email */}
@@ -663,12 +708,18 @@ export default function Profile({ self }) {
                       </div>
                     )}
 
-                    {(profile.team || ((isSelf || isFriendOfProfile) && profile.wechat)) && (
+                    {(profile.team || profile.region || ((isSelf || isFriendOfProfile) && profile.wechat)) && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '10px', flexWrap: 'wrap' }}>
                         {profile.team && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9a8570" strokeWidth="2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
                             <span style={{ fontSize: '12px', color: '#7d6b55', fontWeight: 500 }}>{profile.team}</span>
+                          </div>
+                        )}
+                        {profile.region && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9a8570" strokeWidth="2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <span style={{ fontSize: '12px', color: '#7d6b55', fontWeight: 500 }}>{profile.region}</span>
                           </div>
                         )}
                         {(isSelf || isFriendOfProfile) && profile.wechat && (

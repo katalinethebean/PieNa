@@ -62,12 +62,13 @@ export function FriendProvider({ children }) {
     return () => { supabase.removeChannel(channel); };
   }, [selfId, load]);
 
-  const sendRequest = async (receiverId) => {
+  const sendRequest = async (receiverId, message) => {
     if (friends.includes(receiverId) || sentRequests.includes(receiverId)) return;
     const { error } = await supabase.from('friend_requests').insert({
       sender_id: selfId,
       receiver_id: receiverId,
       status: 'pending',
+      ...(message?.trim() ? { message: message.trim() } : {}),
     });
     if (!error) setSentRequests(p => [...p, receiverId]);
   };

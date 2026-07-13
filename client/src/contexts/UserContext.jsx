@@ -100,6 +100,7 @@ export function UserProvider({ children }) {
       avg_score: Number.isFinite(avgScore) ? Math.round(avgScore * 10) / 10 : 0,
       credits,
       spendCredit,
+      username, setUsername,
       name, setName,
       bio, setBio,
       region, setRegion,

@@ -124,6 +124,8 @@ function DebaterModal({ onClose }) {
   const [q, setQ] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [greetingFor, setGreetingFor] = useState(null);
+  const [greetingDraft, setGreetingDraft] = useState('');
   const { id: selfId } = useUser();
   const { friends, sentRequests, receivedRequests, sendRequest, cancelRequest, acceptRequest } = useFriend();
   const timerRef = useRef(null);
@@ -224,7 +226,19 @@ function DebaterModal({ onClose }) {
                   {st === 'friend' && <span style={{ fontSize: '11px', color: '#5a8f7a', background: 'rgba(90,143,122,0.1)', border: '1px solid rgba(90,143,122,0.25)', padding: '4px 10px', borderRadius: '20px' }}>✓ 好友</span>}
                   {st === 'sent' && <button onClick={() => cancelRequest(d.id)} style={{ fontSize: '11px', color: '#7d6b55', background: 'rgba(200,184,154,0.25)', border: '1px solid rgba(200,184,154,0.4)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>已发送</button>}
                   {st === 'received' && <button onClick={() => acceptRequest(d.id)} style={{ fontSize: '11px', color: '#c07a3a', background: 'rgba(192,122,58,0.1)', border: '1px solid rgba(192,122,58,0.25)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>接受</button>}
-                  {st === 'none' && <button onClick={() => sendRequest(d.id)} style={{ fontSize: '11px', color: '#3a6b5c', background: 'rgba(90,143,122,0.1)', border: '1px solid rgba(90,143,122,0.25)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>+ 加好友</button>}
+                  {st === 'none' && greetingFor !== d.id && <button onClick={() => { setGreetingFor(d.id); setGreetingDraft(''); }} style={{ fontSize: '11px', color: '#3a6b5c', background: 'rgba(90,143,122,0.1)', border: '1px solid rgba(90,143,122,0.25)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>+ 加好友</button>}
+                  {st === 'none' && greetingFor === d.id && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', minWidth: '160px' }}>
+                      <input autoFocus value={greetingDraft} onChange={e => setGreetingDraft(e.target.value.slice(0, 20))}
+                        placeholder="打个招呼（可选）" maxLength={20}
+                        onKeyDown={e => { if (e.key === 'Enter') { sendRequest(d.id, greetingDraft); setGreetingFor(null); } if (e.key === 'Escape') setGreetingFor(null); }}
+                        style={{ padding: '5px 8px', border: '1px solid rgba(90,143,122,0.4)', borderRadius: '6px', fontSize: '11px', outline: 'none', fontFamily: 'inherit', background: 'rgba(255,255,255,0.7)', color: '#2C3025' }} />
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button onClick={() => { sendRequest(d.id, greetingDraft); setGreetingFor(null); }} style={{ flex: 1, padding: '4px', fontSize: '10px', fontWeight: 600, background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>发送</button>
+                        <button onClick={() => setGreetingFor(null)} style={{ padding: '4px 6px', fontSize: '10px', background: 'transparent', color: '#9a8570', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>取消</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -241,6 +255,8 @@ function PeopleSuggestions({ onShowMore }) {
   const { friends, sentRequests, receivedRequests, sendRequest } = useFriend();
   const { id: selfId } = useUser();
   const [suggestions, setSuggestions] = useState([]);
+  const [greetingFor, setGreetingFor] = useState(null);
+  const [greetingDraft, setGreetingDraft] = useState('');
 
   useEffect(() => {
     if (!selfId) return;
@@ -276,8 +292,19 @@ function PeopleSuggestions({ onShowMore }) {
                 <span style={{ fontSize: '10px', color: '#c8b89a' }}>已发送</span>
               ) : receivedRequests.includes(d.id) ? (
                 <button onClick={() => {}} style={{ fontSize: '10px', color: '#c07a3a', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>接受</button>
+              ) : greetingFor === d.id ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '130px' }}>
+                  <input autoFocus value={greetingDraft} onChange={e => setGreetingDraft(e.target.value.slice(0, 20))}
+                    placeholder="打个招呼（可选）" maxLength={20}
+                    onKeyDown={e => { if (e.key === 'Enter') { sendRequest(d.id, greetingDraft); setGreetingFor(null); } if (e.key === 'Escape') setGreetingFor(null); }}
+                    style={{ padding: '4px 7px', border: '1px solid rgba(125,155,150,0.4)', borderRadius: '5px', fontSize: '10px', outline: 'none', fontFamily: 'inherit', background: 'rgba(255,255,255,0.7)', color: '#2C3025' }} />
+                  <div style={{ display: 'flex', gap: '3px' }}>
+                    <button onClick={() => { sendRequest(d.id, greetingDraft); setGreetingFor(null); }} style={{ flex: 1, padding: '3px', fontSize: '9px', fontWeight: 600, background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '4px', cursor: 'pointer', fontFamily: 'inherit' }}>发送</button>
+                    <button onClick={() => setGreetingFor(null)} style={{ padding: '3px 5px', fontSize: '9px', background: 'transparent', color: '#9a8570', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '4px', cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
+                  </div>
+                </div>
               ) : (
-                <button onClick={() => sendRequest(d.id)} style={{ fontSize: '10px', color: '#7d9b96', background: 'none', border: '1px solid rgba(125,155,150,0.35)', padding: '3px 8px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>+ 加好友</button>
+                <button onClick={() => { setGreetingFor(d.id); setGreetingDraft(''); }} style={{ fontSize: '10px', color: '#7d9b96', background: 'none', border: '1px solid rgba(125,155,150,0.35)', padding: '3px 8px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>+ 加好友</button>
               )}
             </div>
           </div>
@@ -298,11 +325,69 @@ function PeopleSuggestions({ onShowMore }) {
   );
 }
 
+function EditRecruitModal({ post, onClose, onSaved }) {
+  const [form, setForm] = useState({ role: post.role || ROLE_OPTIONS[0], note: post.note || '' });
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
+  const inputStyle = { width: '100%', padding: '9px 12px', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '8px', fontSize: '13px', color: '#2C3025', background: 'rgba(255,255,255,0.65)', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSaving(true);
+    const { error: err } = await supabase.from('recruit_posts').update({ role: form.role, note: form.note.trim() }).eq('id', post.id);
+    setSaving(false);
+    if (err) { setError('保存失败，请重试'); return; }
+    onSaved({ ...post, role: form.role, note: form.note.trim() });
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(44,48,37,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+      onClick={onClose}>
+      <motion.div initial={{ opacity: 0, y: 20, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.96 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+        className="glass-card" style={{ width: '100%', maxWidth: '480px', padding: 0, overflow: 'hidden', background: 'rgba(248,244,238,0.97)' }}
+        onClick={e => e.stopPropagation()}>
+        <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid rgba(200,184,154,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025' }}>编辑招募帖</h2>
+          <button onClick={onClose} style={{ background: 'rgba(200,184,154,0.3)', border: '1px solid rgba(200,184,154,0.4)', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', fontSize: '13px', color: '#5a4a3a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+        </div>
+        <form onSubmit={handleSubmit} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#5a4a3a', display: 'block', marginBottom: '6px' }}>身份 *</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {ROLE_OPTIONS.map(r => (
+                <div key={r} onClick={() => setForm(f => ({ ...f, role: r }))}
+                  style={{ padding: '7px 14px', borderRadius: '16px', fontSize: '12px', cursor: 'pointer', fontWeight: 600, border: form.role === r ? '1px solid #2C3025' : '1px solid rgba(200,184,154,0.5)', background: form.role === r ? '#2C3025' : 'rgba(255,255,255,0.65)', color: form.role === r ? '#E8E4DC' : '#5a4a3a' }}>{r}</div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#5a4a3a' }}>详情 *</label>
+              <span style={{ fontSize: '11px', color: form.note.length >= 500 ? '#c0392b' : '#9a8570' }}>{form.note.length}/500</span>
+            </div>
+            <textarea required maxLength={500} value={form.note} onChange={set('note')} rows={4} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
+          </div>
+          {error && <p style={{ fontSize: '12px', color: '#c0392b', textAlign: 'center' }}>{error}</p>}
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} type="submit" disabled={saving}
+            style={{ padding: '11px', background: saving ? '#9a8570' : '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+            {saving ? '保存中…' : '保存修改'}
+          </motion.button>
+        </form>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function MyRecruits({ refreshKey, onPostChange }) {
   const { id: selfId } = useUser();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [editingPost, setEditingPost] = useState(null);
 
   const load = () => {
     if (!selfId) return;
@@ -346,6 +431,19 @@ function MyRecruits({ refreshKey, onPostChange }) {
         onConfirm={() => deletePost(confirmDeleteId)}
       />
     )}
+    <AnimatePresence>
+      {editingPost && (
+        <EditRecruitModal
+          post={editingPost}
+          onClose={() => setEditingPost(null)}
+          onSaved={(updated) => {
+            setPosts(ps => ps.map(p => p.id === updated.id ? updated : p));
+            setEditingPost(null);
+            onPostChange?.();
+          }}
+        />
+      )}
+    </AnimatePresence>
     <div className="glass-card" style={{ padding: '20px', marginTop: '12px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <p style={{ fontSize: '12px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.1em', marginBottom: '16px', flexShrink: 0 }}>我的招募</p>
       {loading ? (
@@ -383,6 +481,14 @@ function MyRecruits({ refreshKey, onPostChange }) {
                   overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 10, WebkitBoxOrient: 'vertical',
                 }}>{p.note}</p>
                 <div style={{ position: 'absolute', right: '10px', bottom: '10px', display: 'flex', gap: '6px' }}>
+                  <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+                    onClick={() => setEditingPost(p)}
+                    title="编辑"
+                    style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(90,143,122,0.08)', border: '1px solid rgba(90,143,122,0.25)', borderRadius: '7px', cursor: 'pointer', color: '#5a8f7a', padding: 0 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </motion.button>
                   <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                     onClick={() => toggleArchive(p.id, !p.archived)}
                     title={p.archived ? '取消归档' : '归档'}

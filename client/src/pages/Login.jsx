@@ -14,6 +14,7 @@ export default function Login() {
   const [form, setForm] = useState({ name: '', username: '', email: '', loginUsername: '', password: '' });
   const [captchaToken, setCaptchaToken] = useState('');
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const [showPwd, setShowPwd] = useState(false);
 
   // token 单次有效，验证失败后重置小组件让用户重新验证
   function resetCaptcha() {
@@ -280,10 +281,19 @@ export default function Login() {
 
               <div style={{ marginBottom: '24px' }}>
                 <label style={labelStyle}>密码 <span style={{ color: '#a03030' }}>*</span></label>
-                <input style={inputStyle} type="password"
-                  placeholder={mode === 'register' ? '至少 6 位' : '请输入密码'}
-                  value={form.password} onChange={e => setField('password', e.target.value)}
-                  required autoComplete={mode === 'register' ? 'new-password' : 'current-password'} />
+                <div style={{ position: 'relative' }}>
+                  <input style={{ ...inputStyle, paddingRight: '42px' }} type={showPwd ? 'text' : 'password'}
+                    placeholder={mode === 'register' ? '至少 6 位' : '请输入密码'}
+                    value={form.password} onChange={e => setField('password', e.target.value)}
+                    required autoComplete={mode === 'register' ? 'new-password' : 'current-password'} />
+                  <button type="button" onClick={() => setShowPwd(v => !v)}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9a8570', padding: '4px', display: 'flex', alignItems: 'center' }}>
+                    {showPwd
+                      ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                      : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    }
+                  </button>
+                </div>
               </div>
 
               <TurnstileWidget onToken={setCaptchaToken} resetKey={captchaResetKey} />

@@ -268,26 +268,35 @@ function ChatThread({ otherId }) {
 
   useEffect(() => { markRead(otherId); }, [otherId, markRead]);
 
+  // Direct realtime subscription for incoming messages in this thread
   useEffect(() => {
     if (!selfId || !otherId) return;
     const channel = supabase
       .channel(`thread_${selfId}_${otherId}`)
       .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'messages', filter: `sender_id=eq.${otherId}`,
-      }, ({ new: row }) => {
-        if (row.receiver_id !== selfId) return;
-        setMessages(prev => prev.some(m => m.id === row.id) ? prev : [...prev, row]);
+        event: 'INSERT', schema: 'public', table: 'messages',
+        filter: `sender_id=eq.${otherId}`,
+      }, payload => {
+        const msg = payload.new;
+        if (msg.receiver_id !== selfId) return;
+        setMessages(prev => {
+          if (prev.some(m => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
         markRead(otherId);
-      })
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'messages', filter: `sender_id=eq.${selfId}`,
-      }, ({ new: row }) => {
-        if (row.receiver_id !== otherId) return;
-        setMessages(prev => prev.some(m => m.id === row.id) ? prev : [...prev, row]);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [selfId, otherId, markRead]);
+
+  // Piggyback on ChatContext's reliable realtime: whenever the conversation's
+  // lastMessageTime changes (ChatContext already detected a new message), re-fetch
+  // the thread so both sides stay in sync without relying on column-filtered subscriptions.
+  const conversationLastMessageTime = conversations.find(c => c.otherId === otherId)?.lastMessageTime;
+  useEffect(() => {
+    load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationLastMessageTime]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
