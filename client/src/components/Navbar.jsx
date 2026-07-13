@@ -21,10 +21,9 @@ const NAV = [
   },
   {
     to: '/review', label: '复盘', icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8" stroke="currentColor"/>
-        <path d="M21 21l-4.35-4.35" stroke="currentColor"/>
-        <path d="M11 8v3.5L13.5 14" stroke="currentColor"/>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
+        <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
       </svg>
     ),
   },
