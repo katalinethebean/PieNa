@@ -1,7 +1,10 @@
-import { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { supabase, isConfigured } from '../lib/supabase';
+
+// Fire this event (e.g. from the navbar "?" button) to replay the tutorial.
+export const OPEN_ONBOARDING_EVENT = 'open-onboarding';
 
 const inputStyle = {
   width: '100%', padding: '9px 13px',
@@ -17,9 +20,61 @@ const labelStyle = {
   color: '#9a8570', marginBottom: '5px', letterSpacing: '0.08em',
 };
 
+// Feature walkthrough pages (between the welcome page and the profile page)
+const FEATURES = [
+  {
+    key: 'review',
+    icon: (
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" />
+      </svg>
+    ),
+    title: 'AI 复盘评分',
+    desc: '上传或录制你的辩论录音，撇捺会自动转录逐位发言，并从逻辑、论证、配合等维度给出评分与点评。',
+  },
+  {
+    key: 'leaderboard',
+    icon: (
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+        <path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+      </svg>
+    ),
+    title: '段位榜排名',
+    desc: '按一辩到四辩的辩位积分，以及总榜，与全站辩手同台竞技。打得越多、表现越好，排名越靠前。',
+  },
+  {
+    key: 'discover',
+    icon: (
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+      </svg>
+    ),
+    title: '发现与招募',
+    desc: '在「发现」里寻找辩友、浏览招募信息、结识潜在对手，为下一场比赛找到合适的搭档或对阵。',
+  },
+  {
+    key: 'social',
+    icon: (
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+    ),
+    title: '人脉与私信',
+    desc: '添加好友、实时私信、组队约辩。公开档案还能被更多辩手看到，扩展你的辩论圈子。',
+  },
+];
+
 export default function OnboardingModal() {
   const user = useUser();
   const fileInputRef = useRef(null);
+
+  // Wizard step: 0 = welcome, 1..FEATURES.length = features, last = profile form
+  const PROFILE_STEP = FEATURES.length + 1;
+  const [step, setStep] = useState(0);
+  const [dir, setDir] = useState(1);
 
   const [name, setName] = useState('');
   const [team, setTeam] = useState('');
@@ -32,8 +87,27 @@ export default function OnboardingModal() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Only show when profile is loaded and name is still empty
-  if (!user.profileLoaded || !user.id || user.name) return null;
+  // Replay mode: opened manually via the navbar "?" button (profile already done)
+  const [forceOpen, setForceOpen] = useState(false);
+  useEffect(() => {
+    const handler = () => { setStep(0); setDir(1); setForceOpen(true); };
+    window.addEventListener(OPEN_ONBOARDING_EVENT, handler);
+    return () => window.removeEventListener(OPEN_ONBOARDING_EVENT, handler);
+  }, []);
+
+  if (!user.profileLoaded || !user.id) return null;
+  // Auto-show for brand-new users (no name yet); otherwise only when replayed.
+  if (user.name && !forceOpen) return null;
+
+  // First-time users finish on the profile-completion step; replays end on the
+  // last feature page (no need to re-enter their profile).
+  const firstTime = !user.name;
+  const lastStep = firstTime ? PROFILE_STEP : FEATURES.length;
+
+  function close() { setForceOpen(false); setStep(0); }
+
+  function goNext() { setDir(1); setStep(s => Math.min(s + 1, lastStep)); }
+  function goBack() { setDir(-1); setStep(s => Math.max(s - 1, 0)); }
 
   function handleAvatarChange(e) {
     const file = e.target.files?.[0];
@@ -45,7 +119,7 @@ export default function OnboardingModal() {
   }
 
   async function handleSave() {
-    if (!name.trim()) { setError('请输入你的姓名'); return; }
+    if (!name.trim()) { setError('请输入你的昵称'); return; }
     setSaving(true);
     setError('');
 
@@ -84,17 +158,24 @@ export default function OnboardingModal() {
     if (avatarUrl) user.setAvatarUrl(avatarUrl);
 
     setSaving(false);
+    // Modal unmounts automatically once user.name is set
   }
 
+  const totalSteps = lastStep + 1;
+
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 200,
-      backgroundColor: 'rgba(44,48,37,0.6)',
-      backdropFilter: 'blur(6px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '24px',
-    }}>
+    <div
+      onClick={forceOpen ? close : undefined}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        backgroundColor: 'rgba(44,48,37,0.6)',
+        backdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px',
+      }}
+    >
       <motion.div
+        onClick={e => e.stopPropagation()}
         initial={{ opacity: 0, y: 24, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: 'spring', stiffness: 280, damping: 26 }}
@@ -103,138 +184,269 @@ export default function OnboardingModal() {
           background: '#F2EDE4', borderRadius: '20px',
           padding: '36px 32px', maxHeight: '90vh', overflowY: 'auto',
           display: 'flex', flexDirection: 'column', gap: '20px',
+          position: 'relative',
         }}
       >
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '4px' }}>
-          <h1 style={{ fontSize: '26px', fontWeight: 900, color: '#2C3025', letterSpacing: '0.12em', marginBottom: '8px' }}>
-            撇捺
-          </h1>
-          <p style={{ fontSize: '14px', color: '#6b5c45', fontWeight: 500 }}>完善你的辩手档案</p>
-          <div style={{ width: '32px', height: '2px', background: '#a4b9b5', margin: '12px auto 0' }} />
-        </div>
-
-        {/* Avatar */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-          <div
-            onClick={() => fileInputRef.current?.click()}
+        {/* Close button — only in replay mode (first-time users must finish) */}
+        {forceOpen && (
+          <button
+            onClick={close}
+            aria-label="关闭"
             style={{
-              width: '80px', height: '80px', borderRadius: '50%',
-              background: '#2C3025', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', color: '#E8E4DC', fontSize: '28px', fontWeight: 700,
-              border: '3px solid rgba(164,185,181,0.5)', cursor: 'pointer',
-              overflow: 'hidden', position: 'relative',
+              position: 'absolute', top: '16px', right: '16px',
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              color: '#9a8570', padding: '4px', lineHeight: 0,
             }}
           >
-            {avatarPreview
-              ? <img src={avatarPreview} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-              : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(232,228,220,0.6)" strokeWidth="1.5" strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            }
-            <div style={{
-              position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              opacity: 0, transition: 'opacity 0.2s', borderRadius: '50%',
-            }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '0'}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            </div>
-          </div>
-          <span style={{ fontSize: '11px', color: '#a4b9b5' }}>点击上传头像（可选）</span>
-          <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
-        </div>
-
-        {/* Name */}
-        <div>
-          <label style={labelStyle}>昵称 <span style={{ color: '#a03030' }}>*</span></label>
-          <input style={inputStyle} placeholder="请输入你的昵称" value={name} onChange={e => { setName(e.target.value); setError(''); }} />
-        </div>
-
-        {/* Team */}
-        <div>
-          <label style={labelStyle}>主队</label>
-          <input style={inputStyle} placeholder="学校 / 俱乐部 / 机构" value={team} onChange={e => setTeam(e.target.value)} />
-        </div>
-
-        {/* Bio */}
-        <div>
-          <label style={labelStyle}>个人简介</label>
-          <textarea
-            style={{ ...inputStyle, resize: 'none', height: '88px', lineHeight: 1.6 }}
-            placeholder="介绍一下自己…"
-            value={bio}
-            onChange={e => {
-              const lines = e.target.value.split('\n');
-              if (lines.length > 4) return;
-              if ([...e.target.value].length > 100) return;
-              setBio(e.target.value);
-            }}
-            onKeyDown={e => {
-              if (e.key === 'Enter') {
-                if (bio.split('\n').length >= 4) e.preventDefault();
-              }
-            }}
-          />
-          <div style={{ fontSize: '11px', color: '#a4b9b5', textAlign: 'right', marginTop: '3px' }}>
-            {[...bio].length}/100 · {bio.split('\n').length}/4行
-          </div>
-        </div>
-
-        {/* Honors */}
-        <div>
-          <label style={labelStyle}>荣誉（最多 5 项）</label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {honors.map((h, i) => (
-              <input key={i} style={{ ...inputStyle, fontSize: '13px' }}
-                placeholder={`荣誉 ${i + 1}`} value={h}
-                onChange={e => { const n = [...honors]; n[i] = e.target.value; setHonors(n); }} />
-            ))}
-          </div>
-        </div>
-
-        {/* WeChat */}
-        <div>
-          <label style={labelStyle}>微信号 <span style={{ color: '#a4b9b5', fontWeight: 400 }}>（仅好友可见）</span></label>
-          <input style={inputStyle} placeholder="你的微信号" value={wechat} onChange={e => setWechat(e.target.value)} />
-        </div>
-
-        {/* Public / Private */}
-        <div>
-          <label style={labelStyle}>档案可见性</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {[{ val: true, label: '公开', desc: '可被搜索到' }, { val: false, label: '私密', desc: '仅好友可见详情' }].map(({ val, label, desc }) => (
-              <motion.div key={String(val)} whileTap={{ scale: 0.97 }} onClick={() => setIsPublic(val)}
-                style={{
-                  flex: 1, padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',
-                  border: `1px solid ${isPublic === val ? '#a4b9b5' : 'rgba(200,184,154,0.4)'}`,
-                  background: isPublic === val ? 'rgba(164,185,181,0.12)' : 'rgba(255,255,255,0.3)',
-                }}>
-                <p style={{ fontSize: '13px', fontWeight: 600, color: '#2C3025', margin: '0 0 2px' }}>{label}</p>
-                <p style={{ fontSize: '11px', color: '#9a8570', margin: 0 }}>{desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {error && (
-          <p style={{ fontSize: '13px', color: '#a03030', background: 'rgba(160,48,48,0.06)', border: '1px solid rgba(160,48,48,0.2)', borderRadius: '8px', padding: '10px 14px', margin: 0 }}>
-            {error}
-          </p>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          </button>
         )}
 
-        <motion.button
-          whileTap={{ scale: 0.98 }} onClick={handleSave} disabled={saving}
-          style={{
-            width: '100%', padding: '13px',
-            background: saving ? '#9a8570' : '#2C3025',
-            color: '#E8E4DC', border: 'none', borderRadius: '12px',
-            fontSize: '14px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
-            fontFamily: 'inherit', letterSpacing: '0.1em',
-          }}
-        >
-          {saving ? '保存中…' : '完成，进入撇捺'}
-        </motion.button>
+        {/* Progress dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px' }}>
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <div key={i} style={{
+              width: i === step ? '20px' : '6px', height: '6px', borderRadius: '3px',
+              background: i === step ? '#2C3025' : 'rgba(154,133,112,0.35)',
+              transition: 'all 0.3s ease',
+            }} />
+          ))}
+        </div>
+
+        <AnimatePresence mode="wait" custom={dir}>
+          {/* ---------- WELCOME ---------- */}
+          {step === 0 && (
+            <motion.div key="welcome"
+              custom={dir}
+              initial={{ opacity: 0, x: dir * 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: dir * -40 }}
+              transition={{ duration: 0.25 }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '18px', textAlign: 'center' }}
+            >
+              <div>
+                <h1 style={{ fontSize: '30px', fontWeight: 900, color: '#2C3025', letterSpacing: '0.14em', marginBottom: '10px' }}>
+                  欢迎来到撇捺！
+                </h1>
+                <div style={{ width: '32px', height: '2px', background: '#a4b9b5', margin: '0 auto' }} />
+              </div>
+              <p style={{ fontSize: '14px', color: '#6b5c45', lineHeight: 1.7, margin: 0 }}>
+                撇捺是属于辩手的练习与社交平台。<br />
+                接下来花一分钟，带你快速了解主要功能。
+              </p>
+            </motion.div>
+          )}
+
+          {/* ---------- FEATURE PAGES ---------- */}
+          {step >= 1 && step <= FEATURES.length && (() => {
+            const f = FEATURES[step - 1];
+            return (
+              <motion.div key={f.key}
+                custom={dir}
+                initial={{ opacity: 0, x: dir * 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: dir * -40 }}
+                transition={{ duration: 0.25 }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '18px', textAlign: 'center', padding: '8px 0' }}
+              >
+                <div style={{
+                  width: '68px', height: '68px', borderRadius: '18px',
+                  background: '#2C3025', color: '#E8E4DC',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {f.icon}
+                </div>
+                <h2 style={{ fontSize: '21px', fontWeight: 800, color: '#2C3025', margin: 0, letterSpacing: '0.04em' }}>
+                  {f.title}
+                </h2>
+                <p style={{ fontSize: '14px', color: '#6b5c45', lineHeight: 1.75, margin: 0, maxWidth: '340px' }}>
+                  {f.desc}
+                </p>
+              </motion.div>
+            );
+          })()}
+
+          {/* ---------- PROFILE FORM ---------- */}
+          {step === PROFILE_STEP && (
+            <motion.div key="profile"
+              custom={dir}
+              initial={{ opacity: 0, x: dir * 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: dir * -40 }}
+              transition={{ duration: 0.25 }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#2C3025', margin: '0 0 6px' }}>
+                  最后一步 · 完善档案
+                </h2>
+                <p style={{ fontSize: '13px', color: '#9a8570', margin: 0 }}>让其他辩手认识你</p>
+              </div>
+
+              {/* Avatar */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    width: '80px', height: '80px', borderRadius: '50%',
+                    background: '#2C3025', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', color: '#E8E4DC', fontSize: '28px', fontWeight: 700,
+                    border: '3px solid rgba(164,185,181,0.5)', cursor: 'pointer',
+                    overflow: 'hidden', position: 'relative',
+                  }}
+                >
+                  {avatarPreview
+                    ? <img src={avatarPreview} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                    : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(232,228,220,0.6)" strokeWidth="1.5" strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  }
+                </div>
+                <span style={{ fontSize: '11px', color: '#a4b9b5' }}>点击上传头像（可选）</span>
+                <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+              </div>
+
+              {/* Name */}
+              <div>
+                <label style={labelStyle}>昵称 <span style={{ color: '#a03030' }}>*</span></label>
+                <input style={inputStyle} placeholder="请输入你的昵称" value={name} onChange={e => { setName(e.target.value); setError(''); }} />
+              </div>
+
+              {/* Team */}
+              <div>
+                <label style={labelStyle}>主队</label>
+                <input style={inputStyle} placeholder="学校 / 俱乐部 / 机构" value={team} onChange={e => setTeam(e.target.value)} />
+              </div>
+
+              {/* Bio */}
+              <div>
+                <label style={labelStyle}>个人简介</label>
+                <textarea
+                  style={{ ...inputStyle, resize: 'none', height: '88px', lineHeight: 1.6 }}
+                  placeholder="介绍一下自己…"
+                  value={bio}
+                  onChange={e => {
+                    const lines = e.target.value.split('\n');
+                    if (lines.length > 4) return;
+                    if ([...e.target.value].length > 100) return;
+                    setBio(e.target.value);
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      if (bio.split('\n').length >= 4) e.preventDefault();
+                    }
+                  }}
+                />
+                <div style={{ fontSize: '11px', color: '#a4b9b5', textAlign: 'right', marginTop: '3px' }}>
+                  {[...bio].length}/100 · {bio.split('\n').length}/4行
+                </div>
+              </div>
+
+              {/* Honors */}
+              <div>
+                <label style={labelStyle}>荣誉（最多 5 项）</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {honors.map((h, i) => (
+                    <input key={i} style={{ ...inputStyle, fontSize: '13px' }}
+                      placeholder={`荣誉 ${i + 1}`} value={h}
+                      onChange={e => { const n = [...honors]; n[i] = e.target.value; setHonors(n); }} />
+                  ))}
+                </div>
+              </div>
+
+              {/* WeChat */}
+              <div>
+                <label style={labelStyle}>微信号 <span style={{ color: '#a4b9b5', fontWeight: 400 }}>（仅好友可见）</span></label>
+                <input style={inputStyle} placeholder="你的微信号" value={wechat} onChange={e => setWechat(e.target.value)} />
+              </div>
+
+              {/* Public / Private */}
+              <div>
+                <label style={labelStyle}>档案可见性</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {[{ val: true, label: '公开', desc: '可被搜索到' }, { val: false, label: '私密', desc: '仅好友可见详情' }].map(({ val, label, desc }) => (
+                    <motion.div key={String(val)} whileTap={{ scale: 0.97 }} onClick={() => setIsPublic(val)}
+                      style={{
+                        flex: 1, padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',
+                        border: `1px solid ${isPublic === val ? '#a4b9b5' : 'rgba(200,184,154,0.4)'}`,
+                        background: isPublic === val ? 'rgba(164,185,181,0.12)' : 'rgba(255,255,255,0.3)',
+                      }}>
+                      <p style={{ fontSize: '13px', fontWeight: 600, color: '#2C3025', margin: '0 0 2px' }}>{label}</p>
+                      <p style={{ fontSize: '11px', color: '#9a8570', margin: 0 }}>{desc}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {error && (
+                <p style={{ fontSize: '13px', color: '#a03030', background: 'rgba(160,48,48,0.06)', border: '1px solid rgba(160,48,48,0.2)', borderRadius: '8px', padding: '10px 14px', margin: 0 }}>
+                  {error}
+                </p>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ---------- NAV BUTTONS ---------- */}
+        <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+          {step > 0 && (
+            <motion.button
+              whileTap={{ scale: 0.98 }} onClick={goBack}
+              style={{
+                padding: '13px 22px', background: 'transparent',
+                color: '#6b5c45', border: '1px solid rgba(200,184,154,0.6)',
+                borderRadius: '12px', fontSize: '14px', fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+              }}
+            >
+              上一步
+            </motion.button>
+          )}
+          {step < lastStep ? (
+            <motion.button
+              whileTap={{ scale: 0.98 }} onClick={goNext}
+              style={{
+                flex: 1, padding: '13px', background: '#2C3025',
+                color: '#E8E4DC', border: 'none', borderRadius: '12px',
+                fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'inherit', letterSpacing: '0.1em',
+              }}
+            >
+              {step === 0 ? '开始了解' : '下一步'}
+            </motion.button>
+          ) : firstTime ? (
+            <motion.button
+              whileTap={{ scale: 0.98 }} onClick={handleSave} disabled={saving}
+              style={{
+                flex: 1, padding: '13px',
+                background: saving ? '#9a8570' : '#2C3025',
+                color: '#E8E4DC', border: 'none', borderRadius: '12px',
+                fontSize: '14px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit', letterSpacing: '0.1em',
+              }}
+            >
+              {saving ? '保存中…' : '完成，进入撇捺'}
+            </motion.button>
+          ) : (
+            <motion.button
+              whileTap={{ scale: 0.98 }} onClick={close}
+              style={{
+                flex: 1, padding: '13px', background: '#2C3025',
+                color: '#E8E4DC', border: 'none', borderRadius: '12px',
+                fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+                fontFamily: 'inherit', letterSpacing: '0.1em',
+              }}
+            >
+              完成
+            </motion.button>
+          )}
+        </div>
+
+        {/* Skip walkthrough link — first-time users only (jumps to profile) */}
+        {firstTime && step >= 1 && step < PROFILE_STEP && (
+          <button
+            onClick={() => { setDir(1); setStep(PROFILE_STEP); }}
+            style={{
+              background: 'transparent', border: 'none', color: '#a4b9b5',
+              fontSize: '12px', fontFamily: 'inherit', cursor: 'pointer',
+              marginTop: '-8px',
+            }}
+          >
+            跳过介绍，直接完善档案
+          </button>
+        )}
       </motion.div>
     </div>
   );

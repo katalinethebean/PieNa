@@ -1052,5 +1052,41 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function get_recruit_feed(text[], double precision, int) to authenticated;
 
+-- ============================================================
+-- 迁移：注册时由数据库触发器创建 profile 行
+-- 开启邮箱验证（Confirm email）后，signUp 不返回 session，
+-- 客户端的 insert 会被 RLS 拦截。改由 auth.users 上的触发器
+-- 用注册时写入的 metadata（username / name）在服务端创建档案。
+-- ============================================================
+create or replace function handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, username, name, email, is_public, credits)
+  values (
+    new.id,
+    nullif(lower(new.raw_user_meta_data->>'username'), ''),
+    coalesce(new.raw_user_meta_data->>'name', ''),
+    lower(new.email),
+    true,
+    3
+  )
+  on conflict (id) do nothing;
+  return new;
+exception
+  when others then
+    -- 绝不因档案创建失败而阻断注册本身
+    return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function handle_new_user();
+
 -- 放在文件末尾，确保上面新建的表/函数都进入 PostgREST 的 schema cache
 notify pgrst, 'reload schema';

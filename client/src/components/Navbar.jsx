@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useFriend } from '../contexts/FriendContext';
 import LoginPromptModal from './LoginPromptModal';
+import { OPEN_ONBOARDING_EVENT } from './OnboardingModal';
 import { isConfigured } from '../lib/supabase';
 import { useUser } from '../contexts/UserContext';
 import { useMatchInvite } from '../contexts/MatchInviteContext';
@@ -117,11 +118,33 @@ export default function Navbar() {
       padding: '0 32px',
     }}>
       {/* Logo */}
-      <Link to="/discover" style={{ textDecoration: 'none', marginRight: '40px', flexShrink: 0 }}>
-        <span style={{ fontSize: '16px', fontWeight: 700, color: '#E8E4DC', letterSpacing: '0.05em', fontFamily: 'inherit' }}>
-          撇捺
-        </span>
-      </Link>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginRight: '40px', flexShrink: 0 }}>
+        <Link to="/discover" style={{ textDecoration: 'none' }}>
+          <span style={{ fontSize: '16px', fontWeight: 700, color: '#E8E4DC', letterSpacing: '0.05em', fontFamily: 'inherit' }}>
+            撇捺
+          </span>
+        </Link>
+        {!guest && (
+          <motion.button
+            onClick={() => window.dispatchEvent(new Event(OPEN_ONBOARDING_EVENT))}
+            whileHover={{ scale: 1.1, color: 'rgba(232,228,220,0.9)' }}
+            whileTap={{ scale: 0.9 }}
+            aria-label="新手教程"
+            title="新手教程"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'rgba(232,228,220,0.4)', lineHeight: 0,
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </motion.button>
+        )}
+      </div>
 
       {/* Nav tabs */}
       <motion.div layoutRoot style={{ display: 'flex', gap: '4px', flex: 1, justifyContent: 'center' }}>

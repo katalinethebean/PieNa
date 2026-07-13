@@ -102,7 +102,16 @@ export default function Login() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: { captchaToken: captchaToken || undefined },
+      options: {
+        captchaToken: captchaToken || undefined,
+        // Passed to the handle_new_user() DB trigger, which creates the
+        // profile row server-side. Needed because with email confirmation on,
+        // signUp returns no session and a client-side insert would be blocked by RLS.
+        data: {
+          username: form.username.toLowerCase(),
+          name: form.name.trim(),
+        },
+      },
     });
 
     if (signUpError) {
@@ -117,7 +126,10 @@ export default function Login() {
       return;
     }
 
-    if (data.user) {
+    // The profile row is created by the handle_new_user() DB trigger from the
+    // metadata above. When a session exists (email confirmation disabled), we
+    // still upsert client-side to fill in any extra fields immediately.
+    if (data.user && data.session) {
       await supabase.from('profiles').upsert({
         id: data.user.id,
         username: form.username.toLowerCase(),
@@ -137,7 +149,7 @@ export default function Login() {
     if (data.session) {
       navigate('/discover');
     } else {
-      setSuccess('注册成功！请检查邮箱并点击确认链接后登录。');
+      setSuccess('注册成功！我们已向你的邮箱发送了一封验证邮件，请点击其中的链接完成验证后再登录。');
       setLoading(false);
       setMode('login');
     }
