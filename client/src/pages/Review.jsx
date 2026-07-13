@@ -544,7 +544,8 @@ export default function Review() {
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}
       >
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#2C3025', marginBottom: '6px' }}>复盘分析</h1>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#2C3025', marginBottom: '4px' }}>复盘分析</h1>
+          <p style={{ fontSize: '12px', color: '#9a8570', margin: 0 }}>所有分析与评分仅供参考。</p>
         </div>
         <motion.button
           onClick={() => setShowHistory(true)}
@@ -583,12 +584,12 @@ export default function Review() {
             发言内容 *
           </label>
           <textarea value={text} onChange={e => setText(e.target.value)}
-            placeholder="黏贴文字转录或稿件原文"
+            placeholder="粘贴文字转录或稿件原文"
             rows={10} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }} />
         </div>
 
         <div style={{ marginBottom: '24px' }}>
-          <label style={labelStyle}>详细提示词/问题 <span style={{ fontWeight: 400, color: '#9a8570' }}>（可选）</span></label>
+          <label style={labelStyle}>补充说明 <span style={{ fontWeight: 400, color: '#9a8570' }}>（可选）</span></label>
           <textarea value={context} onChange={e => setContext(e.target.value)}
             placeholder="详细提示词/问题"
             rows={3} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }} />
