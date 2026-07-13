@@ -66,14 +66,12 @@ export function ChatProvider({ children }) {
 
   useEffect(() => {
     if (!selfId) return;
+    // No column filter — RLS (sender_id=auth.uid() OR receiver_id=auth.uid()) ensures
+    // only this user's messages fire the event. Column filters on postgres_changes
+    // require REPLICA IDENTITY FULL and are unreliable without it.
     const channel = supabase
       .channel(`messages_${selfId}`)
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'messages', filter: `receiver_id=eq.${selfId}`,
-      }, () => load())
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'messages', filter: `sender_id=eq.${selfId}`,
-      }, () => load())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [selfId, load]);
