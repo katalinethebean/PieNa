@@ -66,14 +66,14 @@ export function ChatProvider({ children }) {
 
   useEffect(() => {
     if (!selfId) return;
-    // No column filter — RLS (sender_id=auth.uid() OR receiver_id=auth.uid()) ensures
-    // only this user's messages fire the event. Column filters on postgres_changes
-    // require REPLICA IDENTITY FULL and are unreliable without it.
     const channel = supabase
       .channel(`messages_${selfId}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => load())
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    // Polling fallback: realtime requires REPLICA IDENTITY FULL on the DB side;
+    // if that's not set, events are silently dropped. Poll every 3s as safety net.
+    const poll = setInterval(load, 3000);
+    return () => { supabase.removeChannel(channel); clearInterval(poll); };
   }, [selfId, load]);
 
   const blockUser = async (otherId) => {
