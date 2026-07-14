@@ -9,7 +9,7 @@ import { OPEN_ONBOARDING_EVENT } from './OnboardingModal';
 import { isConfigured } from '../lib/supabase';
 import { useUser } from '../contexts/UserContext';
 import { useChat } from '../contexts/ChatContext';
-import { useIsMobile, MOBILE_TOP_H, MOBILE_BOTTOM_H } from '../lib/useIsMobile';
+import { useIsMobile, MOBILE_TOP_H_TOTAL, MOBILE_BOTTOM_H } from '../lib/useIsMobile';
 
 const homeIcon = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round">
@@ -191,13 +191,16 @@ export default function Navbar() {
       <>
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-          height: `${MOBILE_TOP_H}px`,
+          height: MOBILE_TOP_H_TOTAL,
           background: 'rgba(44,48,37,0.97)',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '0 16px',
+          // standalone 全屏模式下状态栏（电量/时间）会盖住内容，用安全区把内容推下去
+          paddingTop: 'env(safe-area-inset-top)',
+          boxSizing: 'border-box',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: '40px' }}>
             {!guest && (
