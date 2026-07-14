@@ -34,3 +34,27 @@ export function useIsMobile() {
 
   return isMobile;
 }
+
+// iOS「添加到主屏幕」standalone 模式下，env(safe-area-inset-*) 在首次绘制时
+// 有时还没生效，导致固定定位的顶栏/底栏初始高度算错、内容被状态栏或
+// Home 指示条挡住，要等用户手动滑一下页面浏览器才会重新计算并纠正布局。
+// 这里在挂载和每次 App 重新可见时，主动触发一次不可见的微小滚动，
+// 强制浏览器立刻重新计算安全区，不用等用户自己滑一下。
+export function useFixSafeAreaOnLoad() {
+  useEffect(() => {
+    const nudge = () => {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 1);
+        requestAnimationFrame(() => window.scrollTo(0, 0));
+      });
+    };
+    nudge();
+    const onVisible = () => { if (document.visibilityState === 'visible') nudge(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('pageshow', nudge);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('pageshow', nudge);
+    };
+  }, []);
+}

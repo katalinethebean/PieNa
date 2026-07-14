@@ -16,7 +16,7 @@ import { ReviewJobProvider } from './contexts/ReviewJobContext';
 import ReviewJobWidget from './components/ReviewJobWidget';
 import AnalysisOverlay from './components/AnalysisOverlay';
 import { isConfigured } from './lib/supabase';
-import { useIsMobile, MOBILE_TOP_H_TOTAL, MOBILE_BOTTOM_H } from './lib/useIsMobile';
+import { useIsMobile, useFixSafeAreaOnLoad, MOBILE_TOP_H_TOTAL, MOBILE_BOTTOM_H } from './lib/useIsMobile';
 
 function Layout({ children }) {
   const isMobile = useIsMobile();
@@ -54,6 +54,7 @@ function PublicOnlyRoute({ children }) {
 }
 
 export default function App() {
+  useFixSafeAreaOnLoad();
   return (
     <ReviewJobProvider>
       <ReviewJobWidget />
