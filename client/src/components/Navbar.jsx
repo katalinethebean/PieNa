@@ -108,7 +108,7 @@ function MobileBottomNav({ guest, onLocked }) {
     { to: '/discover', label: '首页', icon: homeIcon },
     { to: '/review', label: '复盘', icon: reviewIcon },
     { to: '/chat', label: '聊天', icon: chatIcon, dot: totalUnread > 0 },
-    { to: '/me', label: '头像', profile: true },
+    { to: '/me', label: '我的', profile: true },
   ];
 
   return (
