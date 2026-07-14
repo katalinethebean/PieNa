@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import LoginPromptModal from './LoginPromptModal';
 import NotificationBell from './NotificationBell';
+import DebaterModal from './DebaterModal';
 import { OPEN_ONBOARDING_EVENT } from './OnboardingModal';
 import { isConfigured } from '../lib/supabase';
 import { useUser } from '../contexts/UserContext';
@@ -25,6 +26,23 @@ const reviewIcon = (
 const chatIcon = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor"/>
+  </svg>
+);
+// 手机顶栏专用：积分榜快捷入口
+const leaderboardIcon = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/>
+    <line x1="12" y1="20" x2="12" y2="4"/>
+    <line x1="6" y1="20" x2="6" y2="14"/>
+  </svg>
+);
+// 手机顶栏专用：发现好友快捷入口
+const findFriendsIcon = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M2 21v-2a4 4 0 014-4h6a4 4 0 014 4v2"/>
+    <line x1="19" y1="8" x2="19" y2="14"/>
+    <line x1="16" y1="11" x2="22" y2="11"/>
   </svg>
 );
 
@@ -56,6 +74,26 @@ function OnboardingButton() {
         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
         <line x1="12" y1="17" x2="12.01" y2="17" />
       </svg>
+    </motion.button>
+  );
+}
+
+// 手机顶栏通用小图标按钮（积分榜 / 发现好友快捷入口）
+function TopIconButton({ icon, onClick, label }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileHover={{ scale: 1.1, color: 'rgba(232,228,220,0.9)' }}
+      whileTap={{ scale: 0.9 }}
+      aria-label={label}
+      title={label}
+      style={{
+        background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'rgba(232,228,220,0.4)', lineHeight: 0,
+      }}
+    >
+      {icon}
     </motion.button>
   );
 }
@@ -145,6 +183,7 @@ export default function Navbar() {
   const guest = isConfigured && !authUser;
   const isMobile = useIsMobile();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showDebaterModal, setShowDebaterModal] = useState(false);
 
   // ─── 手机端：极简顶栏 + 底部 tab bar ───────────────────────────
   if (isMobile) {
@@ -160,8 +199,14 @@ export default function Navbar() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '0 16px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', minWidth: '40px' }}>
-            {!guest && <OnboardingButton />}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: '40px' }}>
+            {!guest && (
+              <>
+                <OnboardingButton />
+                <TopIconButton icon={leaderboardIcon} label="积分榜" onClick={() => navigate('/leaderboard')} />
+                <TopIconButton icon={findFriendsIcon} label="发现好友" onClick={() => setShowDebaterModal(true)} />
+              </>
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', minWidth: '40px', justifyContent: 'flex-end' }}>
             {guest ? (
@@ -182,6 +227,7 @@ export default function Navbar() {
 
         <AnimatePresence>
           {showLoginPrompt && <LoginPromptModal onClose={() => setShowLoginPrompt(false)} />}
+          {showDebaterModal && <DebaterModal onClose={() => setShowDebaterModal(false)} />}
         </AnimatePresence>
       </>
     );

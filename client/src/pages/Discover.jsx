@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_UPCOMING_TOURNAMENTS } from '../lib/mockData';
@@ -8,6 +8,7 @@ import { useUser } from '../contexts/UserContext';
 import { supabase, isConfigured } from '../lib/supabase';
 import LoginPromptModal from '../components/LoginPromptModal';
 import ConfirmModal from '../components/ConfirmModal';
+import DebaterModal from '../components/DebaterModal';
 import { useIsMobile } from '../lib/useIsMobile';
 
 const spring = { type: 'spring', stiffness: 300, damping: 22 };
@@ -116,137 +117,6 @@ function LeaderboardCard() {
         </motion.div>
       </Link>
     </div>
-  );
-}
-
-// ─── Debater search modal ────────────────────────────────────────────────────
-
-function DebaterModal({ onClose }) {
-  const [q, setQ] = useState('');
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [greetingFor, setGreetingFor] = useState(null);
-  const [greetingDraft, setGreetingDraft] = useState('');
-  const { id: selfId } = useUser();
-  const { friends, sentRequests, receivedRequests, sendRequest, cancelRequest, acceptRequest } = useFriend();
-  const timerRef = useRef(null);
-
-  useEffect(() => {
-    if (!q.trim()) { setResults([]); return; }
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(async () => {
-      setLoading(true);
-      const term = q.trim().toLowerCase();
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, username, name, school, is_public, avatar_url')
-        .or(`username.ilike.%${term}%,and(name.ilike.%${term}%,is_public.eq.true)`)
-        .neq('id', selfId)
-        .limit(20);
-      setResults(data || []);
-      setLoading(false);
-    }, 300);
-    return () => clearTimeout(timerRef.current);
-  }, [q, selfId]);
-
-  const statusOf = id => {
-    if (friends.includes(id)) return 'friend';
-    if (sentRequests.includes(id)) return 'sent';
-    if (receivedRequests.includes(id)) return 'received';
-    return 'none';
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(44,48,37,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 20, scale: 0.96 }}
-        transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-        className="glass-card"
-        style={{ width: '100%', maxWidth: '480px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', background: 'rgba(248,244,238,0.97)' }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid rgba(200,184,154,0.3)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <div>
-              <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', marginBottom: '2px' }}>发现辩手</h2>
-              <p style={{ fontSize: '11px', color: '#7d6b55' }}>公开账号可按姓名搜索，私密账号仅限用户名</p>
-            </div>
-            <button onClick={onClose} style={{ background: 'rgba(200,184,154,0.3)', border: '1px solid rgba(200,184,154,0.4)', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', fontSize: '13px', color: '#5a4a3a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-          </div>
-          <div style={{ position: 'relative' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7d6b55" strokeWidth="2" strokeLinecap="round" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-            </svg>
-            <input
-              autoFocus
-              value={q} onChange={e => setQ(e.target.value)}
-              placeholder="搜索姓名、用户名…"
-              style={{ width: '100%', padding: '9px 12px 9px 32px', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '8px', fontSize: '13px', color: '#2C3025', background: 'rgba(255,255,255,0.65)', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
-            />
-          </div>
-        </div>
-
-        <div style={{ overflowY: 'auto', flex: 1, padding: '4px 0' }}>
-          {loading && (
-            <p style={{ textAlign: 'center', fontSize: '12px', color: '#9a8570', padding: '24px 0' }}>搜索中…</p>
-          )}
-          {!loading && q && results.length === 0 && (
-            <p style={{ textAlign: 'center', fontSize: '13px', color: '#7d6b55', padding: '32px 0' }}>未找到匹配的辩手</p>
-          )}
-          {!loading && !q && (
-            <p style={{ textAlign: 'center', fontSize: '12px', color: '#9a8570', padding: '32px 0', lineHeight: 1.7 }}>输入姓名或用户名开始搜索</p>
-          )}
-          {results.map(d => {
-            const st = statusOf(d.id);
-            const isPrivate = !d.is_public;
-            const displayName = d.name;
-            return (
-              <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px', borderBottom: '1px solid rgba(200,184,154,0.15)' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '50%', flexShrink: 0, background: 'rgba(44,48,37,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2C3025', fontSize: '14px', fontWeight: 700, overflow: 'hidden' }}>
-                  {d.avatar_url
-                    ? <img src={d.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                    : displayName.slice(0, 1).toUpperCase()
-                  }
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <Link to={`/profile/${d.id}`} onClick={onClose} style={{ textDecoration: 'none' }}>
-                    <p style={{ fontSize: '14px', fontWeight: 600, color: isPrivate ? '#7d6b55' : '#2C3025', marginBottom: '1px' }}>
-                      {displayName}
-                      {isPrivate && <span style={{ fontSize: '10px', color: '#9a8570', marginLeft: '5px', fontWeight: 400 }}>私密</span>}
-                    </p>
-                  </Link>
-                  <p style={{ fontSize: '10px', color: '#8a7560' }}>@{d.username}{!isPrivate && d.school ? ` · ${d.school}` : ''}</p>
-                </div>
-                <div style={{ flexShrink: 0 }}>
-                  {st === 'friend' && <span style={{ fontSize: '11px', color: '#5a8f7a', background: 'rgba(90,143,122,0.1)', border: '1px solid rgba(90,143,122,0.25)', padding: '4px 10px', borderRadius: '20px' }}>✓ 好友</span>}
-                  {st === 'sent' && <button onClick={() => cancelRequest(d.id)} style={{ fontSize: '11px', color: '#7d6b55', background: 'rgba(200,184,154,0.25)', border: '1px solid rgba(200,184,154,0.4)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>已发送</button>}
-                  {st === 'received' && <button onClick={() => acceptRequest(d.id)} style={{ fontSize: '11px', color: '#c07a3a', background: 'rgba(192,122,58,0.1)', border: '1px solid rgba(192,122,58,0.25)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>接受</button>}
-                  {st === 'none' && greetingFor !== d.id && <button onClick={() => { setGreetingFor(d.id); setGreetingDraft(''); }} style={{ fontSize: '11px', color: '#3a6b5c', background: 'rgba(90,143,122,0.1)', border: '1px solid rgba(90,143,122,0.25)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>+ 加好友</button>}
-                  {st === 'none' && greetingFor === d.id && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', minWidth: '160px' }}>
-                      <input autoFocus value={greetingDraft} onChange={e => setGreetingDraft(e.target.value.slice(0, 20))}
-                        placeholder="打个招呼（可选）" maxLength={20}
-                        onKeyDown={e => { if (e.key === 'Enter') { sendRequest(d.id, greetingDraft); setGreetingFor(null); } if (e.key === 'Escape') setGreetingFor(null); }}
-                        style={{ padding: '5px 8px', border: '1px solid rgba(90,143,122,0.4)', borderRadius: '6px', fontSize: '11px', outline: 'none', fontFamily: 'inherit', background: 'rgba(255,255,255,0.7)', color: '#2C3025' }} />
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <button onClick={() => { sendRequest(d.id, greetingDraft); setGreetingFor(null); }} style={{ flex: 1, padding: '4px', fontSize: '10px', fontWeight: 600, background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>发送</button>
-                        <button onClick={() => setGreetingFor(null)} style={{ padding: '4px 6px', fontSize: '10px', background: 'transparent', color: '#9a8570', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>取消</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </motion.div>
-    </motion.div>
   );
 }
 
@@ -768,9 +638,9 @@ function RecruitPostModal({ post, onClose, guest, onRequireLogin }) {
   );
 }
 
-const FEED_FILTERS = ['全部', '好友', '找队友', '找评委', '找教练', '其他'];
+const FEED_FILTERS = ['全部', '我的', '好友', '找队友', '找评委', '找教练', '其他'];
 
-function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin }) {
+function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChange }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openPost, setOpenPost] = useState(null);
@@ -780,6 +650,8 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin }) {
   const { id: selfId } = useUser();
 
   const loadPosts = async () => {
+    // 「我的」走独立的 MyRecruits 组件展示自己的招募帖，不查询公共 feed
+    if (filters.includes('我的')) { setLoading(false); return; }
     setLoading(true);
     // 走 get_recruit_feed：按亲密度+新鲜度+热度+随机(seed)排序，不再一次性拉全平台
     const { data: postData } = await supabase.rpc('get_recruit_feed', {
@@ -809,7 +681,12 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin }) {
 
   const toggleFilter = (f) => {
     if (f === '全部') { setFilters([]); return; }
-    setFilters(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
+    // 「我的」是独占模式（切到自己的招募列表），与身份多选筛选互斥
+    if (f === '我的') { setFilters(prev => prev.includes('我的') ? [] : ['我的']); return; }
+    setFilters(prev => {
+      const withoutMine = prev.filter(x => x !== '我的');
+      return withoutMine.includes(f) ? withoutMine.filter(x => x !== f) : [...withoutMine, f];
+    });
   };
 
   const refresh = () => setSeed(Math.random());
@@ -845,14 +722,23 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin }) {
           );
         })}
       </div>
-      <motion.button
-        whileHover={{ rotate: 90 }} whileTap={{ scale: 0.85 }} onClick={refresh}
-        title="换一批"
-        style={{ flexShrink: 0, width: '32px', height: '32px', borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'rgba(44,48,37,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5a4a3a' }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-        </svg>
-      </motion.button>
+      {!filters.includes('我的') && (
+        <motion.button
+          whileHover={{ rotate: 90 }} whileTap={{ scale: 0.85 }} onClick={refresh}
+          title="换一批"
+          style={{ flexShrink: 0, width: '32px', height: '32px', borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'rgba(44,48,37,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5a4a3a' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+          </svg>
+        </motion.button>
+      )}
+    </div>
+  );
+
+  if (filters.includes('我的')) return (
+    <div>
+      {filterBar}
+      <MyRecruits refreshKey={refreshKey} onPostChange={onPostChange} />
     </div>
   );
 
@@ -948,9 +834,9 @@ function ChallengeTab() {
   );
 }
 
-function CenterFeed({ onRecruit, recruitRefreshKey, guest, onRequireLogin, isMobile }) {
+function CenterFeed({ onRecruit, recruitRefreshKey, guest, onRequireLogin, isMobile, onPostChange }) {
   const teammates = (
-    <TeammatesTab onRecruit={guest ? onRequireLogin : onRecruit} refreshKey={recruitRefreshKey} guest={guest} onRequireLogin={onRequireLogin} />
+    <TeammatesTab onRecruit={guest ? onRequireLogin : onRecruit} refreshKey={recruitRefreshKey} guest={guest} onRequireLogin={onRequireLogin} onPostChange={onPostChange} />
   );
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%' }}>
@@ -999,10 +885,12 @@ export default function Discover() {
       guest={guest}
       onRequireLogin={() => setShowLoginPrompt(true)}
       isMobile={isMobile}
+      onPostChange={() => setRecruitRefreshKey(k => k + 1)}
     />
   );
 
-  // 手机端：招募大厅为主，个人卡/积分榜/好友推荐/我的招募收进顶部「更多」折叠面板
+  // 手机端：招募大厅为主，个人卡/积分榜/好友推荐收进顶部「更多」折叠面板；
+  // 我的招募改到招募大厅筛选栏里的「我的」tab（见 TeammatesTab）
   if (isMobile) {
     return (
       <div style={{ padding: '12px 16px 0' }}>
@@ -1040,9 +928,6 @@ export default function Discover() {
                 <MiniProfile />
                 <LeaderboardCard />
                 <PeopleSuggestions onShowMore={() => setShowModal(true)} />
-                <div style={{ marginTop: '12px' }}>
-                  <MyRecruits refreshKey={recruitRefreshKey} onPostChange={() => setRecruitRefreshKey(k => k + 1)} />
-                </div>
               </div>
             </motion.div>
           )}
