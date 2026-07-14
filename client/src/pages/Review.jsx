@@ -5,6 +5,7 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 import { supabase } from '../lib/supabase';
 import { useReviewJob } from '../contexts/ReviewJobContext';
 import ConfirmModal from '../components/ConfirmModal';
+import { useIsMobile } from '../lib/useIsMobile';
 
 const POSITIONS = [
   '正方一辩', '正方二辩', '正方三辩', '正方四辩',
@@ -239,6 +240,7 @@ export default function Review() {
   const [notePrompt, setNotePrompt] = useState(false);
   const [noteDraft, setNoteDraft] = useState('');
   const printRef = useRef(null);
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
 
   const { jobs, activeJobId, setActiveJobId, startJob, removeJob, updateJob } = useReviewJob();
@@ -461,7 +463,7 @@ export default function Review() {
 
             {/* Highlight + Improvement */}
             {(result.highlight_moment || result.biggest_improvement) && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 {result.highlight_moment && (
                   <div className="glass-card" style={{ padding: '20px' }}>
                     <p style={{ fontSize: '11px', fontWeight: 700, color: '#5a8f7a', letterSpacing: '0.1em', marginBottom: '10px' }}>✦ 最亮眼时刻</p>

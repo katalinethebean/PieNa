@@ -5,6 +5,7 @@ import { useChat } from '../contexts/ChatContext';
 import { useFriend } from '../contexts/FriendContext';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
+import { useIsMobile, MOBILE_FULL_HEIGHT } from '../lib/useIsMobile';
 
 function formatTime(ts) {
   if (!ts) return '';
@@ -222,7 +223,7 @@ function ConversationRow({ conversation, active, onClick, note }) {
   );
 }
 
-function ChatThread({ otherId }) {
+function ChatThread({ otherId, showBack }) {
   const navigate = useNavigate();
   const { id: selfId } = useUser();
   const { sendMessage, markRead, conversations, convoSettings, blockedIds } = useChat();
@@ -336,6 +337,17 @@ function ChatThread({ otherId }) {
         display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px',
         borderBottom: '1px solid rgba(200,184,154,0.3)', flexShrink: 0,
       }}>
+        {showBack && (
+          <button
+            onClick={() => navigate('/chat')}
+            aria-label="返回"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', marginLeft: '-4px', color: '#2C3025', display: 'flex', alignItems: 'center', lineHeight: 0, flexShrink: 0 }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+        )}
         <Avatar profile={otherProfile} size={32} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <Link to={`/profile/${otherId}`} style={{ fontSize: '14px', fontWeight: 600, color: '#2C3025', textDecoration: 'none', display: 'block' }}>
@@ -430,29 +442,47 @@ export default function Chat() {
   const { id: otherId } = useParams();
   const navigate = useNavigate();
   const { conversations, convoSettings } = useChat();
+  const isMobile = useIsMobile();
+
+  const list = (
+    <>
+      <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.12em', padding: '16px 16px 10px' }}>私信</p>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {conversations.length === 0 && (
+          <div style={{ padding: '24px 20px', textAlign: 'center' }}>
+            <p style={{ fontSize: '12px', color: '#c8b89a' }}>还没有聊天哦</p>
+          </div>
+        )}
+        {conversations.map(c => (
+          <ConversationRow
+            key={c.otherId}
+            conversation={c}
+            active={c.otherId === otherId}
+            onClick={() => navigate(`/chat/${c.otherId}`)}
+            note={convoSettings[c.otherId]?.note}
+          />
+        ))}
+      </div>
+    </>
+  );
+
+  // 手机端：一次只显示一屏 —— 有 otherId 显示对话（带返回），否则显示会话列表
+  if (isMobile) {
+    return (
+      <div style={{ height: MOBILE_FULL_HEIGHT, display: 'flex', flexDirection: 'column', background: 'rgba(244,240,232,0.5)' }}>
+        {otherId
+          ? <ChatThread key={otherId} otherId={otherId} showBack />
+          : list}
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '960px', margin: '0 auto', padding: '24px', height: 'calc(100dvh - 60px - 48px)' }}>
       <div className="glass-card" style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
         {/* Conversation list */}
         <div style={{ width: '280px', flexShrink: 0, display: 'flex', flexDirection: 'column', borderRight: '1px solid rgba(200,184,154,0.3)' }}>
-          <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.12em', padding: '16px 16px 10px' }}>私信</p>
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {conversations.length === 0 && (
-              <div style={{ padding: '24px 20px', textAlign: 'center' }}>
-                <p style={{ fontSize: '12px', color: '#c8b89a' }}>还没有聊天哦</p>
-              </div>
-            )}
-            {conversations.map(c => (
-              <ConversationRow
-                key={c.otherId}
-                conversation={c}
-                active={c.otherId === otherId}
-                onClick={() => navigate(`/chat/${c.otherId}`)}
-                note={convoSettings[c.otherId]?.note}
-              />
-            ))}
-          </div>
+          {list}
         </div>
 
         {/* Thread */}

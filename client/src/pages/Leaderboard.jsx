@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, isConfigured } from '../lib/supabase';
+import { useIsMobile, MOBILE_FULL_HEIGHT } from '../lib/useIsMobile';
 
 const BOARDS = [
   { key: '1', label: '一辩榜' },
@@ -67,6 +68,8 @@ export default function Leaderboard() {
   const [boards, setBoards] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeBoard, setActiveBoard] = useState('overall');
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!isConfigured) { setLoading(false); return; }
@@ -82,6 +85,44 @@ export default function Leaderboard() {
   }
   if (error) {
     return <p style={{ fontSize: '13px', color: '#a03030', textAlign: 'center', padding: '80px 0' }}>{error}</p>;
+  }
+
+  // 手机端：顶部段位选择器 + 单个榜单
+  if (isMobile) {
+    const b = BOARDS.find(x => x.key === activeBoard) || BOARDS[0];
+    return (
+      <div style={{ height: MOBILE_FULL_HEIGHT, display: 'flex', flexDirection: 'column', width: '100%', overflow: 'hidden' }}>
+        <div style={{
+          display: 'flex', gap: '6px', padding: '12px 12px 10px', overflowX: 'auto',
+          flexShrink: 0, borderBottom: '1px solid rgba(217,205,181,0.4)',
+        }}>
+          {BOARDS.map(board => {
+            const active = board.key === activeBoard;
+            return (
+              <button
+                key={board.key}
+                onClick={() => setActiveBoard(board.key)}
+                style={{
+                  flexShrink: 0, padding: '7px 16px', borderRadius: '16px', fontSize: '13px',
+                  fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: 'none',
+                  background: active ? '#2C3025' : 'rgba(44,48,37,0.06)',
+                  color: active ? '#E8E4DC' : '#7d6b55',
+                }}
+              >
+                {board.label}
+              </button>
+            );
+          })}
+        </div>
+        <Column
+          key={b.key}
+          label={b.label}
+          rows={boards?.[b.key] || []}
+          self={boards?.self ? { name: boards.self.name, ...boards.self[b.key] } : null}
+          isLast
+        />
+      </div>
+    );
   }
 
   return (

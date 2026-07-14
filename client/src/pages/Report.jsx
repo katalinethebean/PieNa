@@ -7,6 +7,7 @@ import { formatChineseDate } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import ConfirmModal from '../components/ConfirmModal';
 import EditMatchModal from '../components/EditMatchModal';
+import { useIsMobile } from '../lib/useIsMobile';
 
 // DEFINED 8-dimension creativity rubric (current)
 const SCORE_LABELS = [
@@ -130,6 +131,7 @@ export default function Report() {
   const { sessions, updateSession, removeSession } = useUser();
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const isMobile = useIsMobile();
   const s = sessions.find(session => session.id === id);
 
   if (!s) {
@@ -236,7 +238,7 @@ export default function Report() {
 
         {/* Two-column: left = debaters + notes, right = radar + score rows */}
         {hasAnalysis ? (
-          <motion.div variants={itemVariant} style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: '16px', marginBottom: '16px', alignItems: 'start' }}>
+          <motion.div variants={itemVariant} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.4fr', gap: '16px', marginBottom: '16px', alignItems: 'start' }}>
             {/* Left: debaters + notes */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {debaters.length > 0 && (

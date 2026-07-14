@@ -16,13 +16,20 @@ import { ReviewJobProvider } from './contexts/ReviewJobContext';
 import ReviewJobWidget from './components/ReviewJobWidget';
 import AnalysisOverlay from './components/AnalysisOverlay';
 import { isConfigured } from './lib/supabase';
+import { useIsMobile, MOBILE_TOP_H, MOBILE_BOTTOM_H } from './lib/useIsMobile';
 
 function Layout({ children }) {
+  const isMobile = useIsMobile();
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
       <OnboardingModal />
-      <main style={{ flex: 1, paddingTop: '60px' }}>
+      <main style={{
+        flex: 1,
+        paddingTop: isMobile ? `${MOBILE_TOP_H}px` : '60px',
+        // 手机端给底部 tab bar 让位（含安全区）；桌面端无底栏
+        paddingBottom: isMobile ? `calc(${MOBILE_BOTTOM_H}px + env(safe-area-inset-bottom))` : 0,
+      }}>
         {children}
       </main>
     </div>

@@ -8,6 +8,7 @@ import { formatChineseDate, API_URL } from '../lib/utils';
 import { supabase, isConfigured } from '../lib/supabase';
 import ConfirmModal from '../components/ConfirmModal';
 import TeamPicker from '../components/TeamPicker';
+import { useIsMobile } from '../lib/useIsMobile';
 
 const SCORE_LABELS = [
   { key: 'fluency_score', label: '流畅' },
@@ -399,6 +400,7 @@ export default function Profile({ self }) {
   const [showSettings, setShowSettings] = useState(false);
   const [showFriends, setShowFriends] = useState(false);
   const fileInputRef = useRef(null);
+  const isMobile = useIsMobile();
 
   const isSelf = self || !id;
 
@@ -531,7 +533,7 @@ export default function Profile({ self }) {
         )}
       </AnimatePresence>
 
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 24px 80px' }}>
+      <div style={{ maxWidth: '960px', margin: '0 auto', padding: isMobile ? '20px 16px 40px' : '40px 24px 80px' }}>
         <motion.div variants={ctr} initial="hidden" animate="show">
 
           {!isSelf && (
@@ -610,7 +612,7 @@ export default function Profile({ self }) {
                     <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>姓名</label>
                     <input style={inputStyle} value={draftName} onChange={e => setDraftName(e.target.value)} />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '10px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>主队（学校 / 俱乐部 / 机构）</label>
                       <TeamPicker style={inputStyle} value={draftTeam} onChange={setDraftTeam} placeholder="如：拔萃学院辩论学会" />
@@ -677,7 +679,7 @@ export default function Profile({ self }) {
                   <p style={{ fontSize: '11px', color: '#a4b9b5', margin: 0 }}>头像：点击头像图片上传 · 邮箱、微信、公开设置在「设置」中修改</p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: (isSelf || isFriendOfProfile) ? '1fr 260px' : '1fr', gap: '24px', alignItems: 'start' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : ((isSelf || isFriendOfProfile) ? '1fr 260px' : '1fr'), gap: isMobile ? '18px' : '24px', alignItems: 'start' }}>
                   {/* Left: info */}
                   <div>
                     <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#2C3025', marginBottom: '4px' }}>

@@ -5,6 +5,7 @@ import { useFriend } from '../contexts/FriendContext';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
 import ConfirmModal from '../components/ConfirmModal';
+import { useIsMobile, MOBILE_FULL_HEIGHT } from '../lib/useIsMobile';
 
 const W = 920, H = 560;
 const RING_RADIUS = 185;
@@ -103,6 +104,7 @@ export default function Network() {
   const [panelNode, setPanelNode] = useState(null);
   const [friendProfiles, setFriendProfiles] = useState([]);
   const [confirmingUnfriendId, setConfirmingUnfriendId] = useState(null);
+  const isMobile = useIsMobile();
   const [greetingOpen, setGreetingOpen] = useState(false);
   const [greetingDraft, setGreetingDraft] = useState('');
 
@@ -175,7 +177,7 @@ export default function Network() {
 
   return (
     <div style={{
-      height: 'calc(100dvh - 60px)', position: 'relative', overflow: 'hidden',
+      height: isMobile ? MOBILE_FULL_HEIGHT : 'calc(100dvh - 60px)', position: 'relative', overflow: 'hidden',
       background: 'radial-gradient(ellipse at 50% 35%, #1d2813 0%, #080b05 100%)',
     }}>
       {/* Starfield */}

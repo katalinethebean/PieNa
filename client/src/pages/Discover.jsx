@@ -8,6 +8,7 @@ import { useUser } from '../contexts/UserContext';
 import { supabase, isConfigured } from '../lib/supabase';
 import LoginPromptModal from '../components/LoginPromptModal';
 import ConfirmModal from '../components/ConfirmModal';
+import { useIsMobile } from '../lib/useIsMobile';
 
 const spring = { type: 'spring', stiffness: 300, damping: 22 };
 
@@ -945,9 +946,12 @@ function ChallengeTab() {
   );
 }
 
-function CenterFeed({ onRecruit, recruitRefreshKey, guest, onRequireLogin }) {
+function CenterFeed({ onRecruit, recruitRefreshKey, guest, onRequireLogin, isMobile }) {
+  const teammates = (
+    <TeammatesTab onRecruit={guest ? onRequireLogin : onRecruit} refreshKey={recruitRefreshKey} guest={guest} onRequireLogin={onRequireLogin} />
+  );
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexShrink: 0 }}>
         <p style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.04em' }}>招募大厅</p>
@@ -960,12 +964,14 @@ function CenterFeed({ onRecruit, recruitRefreshKey, guest, onRequireLogin }) {
         </motion.button>
       </div>
 
-      {/* Content */}
-      <div style={{ flex: 1, overflow: 'hidden' }}>
-        <div style={{ height: '100%', overflowY: 'auto' }}>
-          <TeammatesTab onRecruit={guest ? onRequireLogin : onRecruit} refreshKey={recruitRefreshKey} guest={guest} onRequireLogin={onRequireLogin} />
+      {/* Content — 手机端随页面滚动，桌面端内部滚动 */}
+      {isMobile ? teammates : (
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          <div style={{ height: '100%', overflowY: 'auto' }}>
+            {teammates}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -979,6 +985,7 @@ export default function Discover() {
   const [showRecruit, setShowRecruit] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [recruitRefreshKey, setRecruitRefreshKey] = useState(0);
+  const isMobile = useIsMobile();
 
   if (isConfigured && authLoading) return null;
 
@@ -988,8 +995,23 @@ export default function Discover() {
       recruitRefreshKey={recruitRefreshKey}
       guest={guest}
       onRequireLogin={() => setShowLoginPrompt(true)}
+      isMobile={isMobile}
     />
   );
+
+  // 手机端：只留招募大厅，随页面滚动，去掉左右两栏
+  if (isMobile) {
+    return (
+      <div style={{ padding: '12px 16px 0' }}>
+        {feed}
+        <AnimatePresence>
+          {showModal && <DebaterModal onClose={() => setShowModal(false)} />}
+          {showRecruit && <RecruitModal onClose={() => setShowRecruit(false)} onPosted={() => { setShowRecruit(false); setRecruitRefreshKey(k => k + 1); }} />}
+          {showLoginPrompt && <LoginPromptModal onClose={() => setShowLoginPrompt(false)} />}
+        </AnimatePresence>
+      </div>
+    );
+  }
 
   // 访客模式下左右栏保留但灰化，点击任意位置弹登录提示
   const railGuestStyle = guest ? { opacity: 0.45, filter: 'grayscale(0.4)', cursor: 'pointer' } : {};
