@@ -40,8 +40,17 @@ export function useIsMobile() {
 // Home 指示条挡住，要等用户手动滑一下页面浏览器才会重新计算并纠正布局。
 // 这里在挂载和每次 App 重新可见时，主动触发一次不可见的微小滚动，
 // 强制浏览器立刻重新计算安全区，不用等用户自己滑一下。
+//
+// 只在真正的 standalone 全屏模式下才需要这个 hack —— 普通浏览器标签页
+// （包括 Chrome）压根没有这个 bug，本来就没有状态栏遮挡问题。之前没加
+// 判断，导致每次进 Chrome 都会触发一次 scrollTo，被 Chrome 地址栏收起/
+// 展开的动画和 100dvh 布局打架，反而把固定定位的顶栏/底栏搞乱了。
 export function useFixSafeAreaOnLoad() {
   useEffect(() => {
+    const isStandalone = window.matchMedia?.('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+    if (!isStandalone) return;
+
     const nudge = () => {
       requestAnimationFrame(() => {
         window.scrollTo(0, 1);
