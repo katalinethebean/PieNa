@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, cloneElement } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -138,17 +138,17 @@ function MobileBottomNav({ guest, onLocked }) {
             <span style={{ position: 'relative', display: 'inline-flex', lineHeight: 0 }}>
               {profile ? (
                 <span style={{
-                  width: '22px', height: '22px', borderRadius: '50%', overflow: 'hidden',
+                  width: '25px', height: '25px', borderRadius: '50%', overflow: 'hidden',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   background: active ? '#a4b9b5' : '#7d9b96', color: '#2C3025',
-                  fontSize: '11px', fontWeight: 700,
+                  fontSize: '12px', fontWeight: 700,
                   border: active ? '1.5px solid rgba(164,185,181,0.7)' : '1.5px solid transparent',
                 }}>
                   {avatarUrl
                     ? <img src={avatarUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                     : (name || '?').slice(0, 1)}
                 </span>
-              ) : icon}
+              ) : cloneElement(icon, { width: 21, height: 21 })}
               {dot && (
                 <span style={{
                   position: 'absolute', top: '-2px', right: '-4px',
