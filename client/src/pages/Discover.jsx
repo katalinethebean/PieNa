@@ -829,16 +829,18 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin }) {
 
   const filterBar = (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap', flex: 1, minWidth: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {FEED_FILTERS.map(f => {
           const active = f === '全部' ? filters.length === 0 : filters.includes(f);
           return (
             <button key={f} onClick={() => toggleFilter(f)}
               style={{
+                flexShrink: 0,
                 padding: '5px 12px', borderRadius: '14px', fontSize: '12px', fontWeight: 600,
                 cursor: 'pointer', fontFamily: 'inherit', border: 'none', transition: 'all .15s',
                 background: active ? '#2C3025' : 'rgba(44,48,37,0.06)',
                 color: active ? '#E8E4DC' : '#7d6b55',
+                whiteSpace: 'nowrap',
               }}>{f}</button>
           );
         })}
