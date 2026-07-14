@@ -873,7 +873,6 @@ export default function Discover() {
   const [showRecruit, setShowRecruit] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [recruitRefreshKey, setRecruitRefreshKey] = useState(0);
-  const [showMore, setShowMore] = useState(false);
   const isMobile = useIsMobile();
 
   if (isConfigured && authLoading) return null;
@@ -889,53 +888,13 @@ export default function Discover() {
     />
   );
 
-  // 手机端：招募大厅为主，个人卡/积分榜/好友推荐收进顶部「更多」折叠面板；
-  // 我的招募改到招募大厅筛选栏里的「我的」tab（见 TeammatesTab）
+  // 手机端：招募大厅为主，个人档案/积分榜/发现好友已挪到顶栏图标入口（见 Navbar），
+  // 我的招募在招募大厅筛选栏里的「我的」tab（见 TeammatesTab）
   if (isMobile) {
     return (
       <div style={{ padding: '12px 16px 0' }}>
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => guest ? setShowLoginPrompt(true) : setShowMore(v => !v)}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '12px 16px', marginBottom: '12px', background: 'rgba(255,255,255,0.5)',
-            border: '1px solid rgba(200,184,154,0.35)', borderRadius: '14px', cursor: 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#2C3025' }}>
-            我的档案 · 积分榜 · 发现好友
-          </span>
-          <motion.svg
-            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7d6b55" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            animate={{ rotate: showMore ? 180 : 0 }} transition={{ duration: 0.2 }}
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </motion.svg>
-        </motion.button>
-
-        <AnimatePresence initial={false}>
-          {showMore && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
-              style={{ overflow: 'hidden' }}
-            >
-              <div style={{ paddingBottom: '4px' }}>
-                <MiniProfile />
-                <LeaderboardCard />
-                <PeopleSuggestions onShowMore={() => setShowModal(true)} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {feed}
         <AnimatePresence>
-          {showModal && <DebaterModal onClose={() => setShowModal(false)} />}
           {showRecruit && <RecruitModal onClose={() => setShowRecruit(false)} onPosted={() => { setShowRecruit(false); setRecruitRefreshKey(k => k + 1); }} />}
           {showLoginPrompt && <LoginPromptModal onClose={() => setShowLoginPrompt(false)} />}
         </AnimatePresence>
