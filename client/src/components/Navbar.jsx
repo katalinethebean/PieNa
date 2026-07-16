@@ -319,8 +319,8 @@ export default function Navbar() {
       {/* Right section: universe toggle + notification bell + profile avatar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, marginLeft: '40px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <UniverseToggle lang={lang} setLang={setLang} />
           {!guest && <OnboardingButton />}
+          <UniverseToggle lang={lang} setLang={setLang} />
         </div>
         {guest ? (
           <motion.button
