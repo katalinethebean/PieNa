@@ -1090,3 +1090,235 @@ create trigger on_auth_user_created
 
 -- 放在文件末尾，确保上面新建的表/函数都进入 PostgREST 的 schema cache
 notify pgrst, 'reload schema';
+
+-- ============================================================
+-- English Universe migrations (2026-07-16)
+-- ============================================================
+
+-- profiles: language preference
+do $$ begin
+  if not exists (select 1 from information_schema.columns
+    where table_name='profiles' and column_name='language') then
+    alter table profiles add column language text not null default 'zh';
+  end if;
+end $$;
+
+-- recruit_posts: which universe this post belongs to
+do $$ begin
+  if not exists (select 1 from information_schema.columns
+    where table_name='recruit_posts' and column_name='language') then
+    alter table recruit_posts add column language text not null default 'zh';
+  end if;
+end $$;
+
+-- sessions: which universe this session belongs to
+do $$ begin
+  if not exists (select 1 from information_schema.columns
+    where table_name='sessions' and column_name='language') then
+    alter table sessions add column language text not null default 'zh';
+  end if;
+end $$;
+
+-- get_recruit_feed: add p_lang parameter to filter by universe
+drop function if exists get_recruit_feed(text[], double precision, int);
+create or replace function get_recruit_feed(
+  p_roles text[] default null,
+  p_seed double precision default 0,
+  p_limit int default 15,
+  p_lang text default 'zh'
+)
+returns table (
+  id uuid,
+  user_id uuid,
+  role text,
+  note text,
+  created_at timestamptz,
+  name text,
+  school text,
+  avatar_url text,
+  like_count bigint,
+  is_friend boolean
+)
+language sql stable security definer set search_path = public as $$
+  with me as (
+    select id, school from profiles where id = auth.uid()
+  ),
+  my_friends as (
+    select case when fr.sender_id = auth.uid() then fr.receiver_id else fr.sender_id end as fid
+    from friend_requests fr
+    where fr.status = 'accepted'
+      and (fr.sender_id = auth.uid() or fr.receiver_id = auth.uid())
+  ),
+  visible as (
+    select rp.id, rp.user_id, rp.role, rp.note, rp.created_at,
+           pr.name, pr.school, pr.avatar_url,
+           (rp.user_id in (select fid from my_friends)) as is_friend
+    from recruit_posts rp
+    join profiles pr on pr.id = rp.user_id
+    where rp.archived = false
+      and coalesce(rp.language, 'zh') = p_lang
+      and (
+        rp.user_id = auth.uid()
+        or rp.user_id in (select fid from my_friends)
+        or pr.is_public = true
+      )
+      and (
+        p_roles is null or array_length(p_roles, 1) is null or '全部' = any(p_roles)
+        or (rp.role = any(p_roles))
+        or ('好友' = any(p_roles) and rp.user_id in (select fid from my_friends))
+      )
+  ),
+  scored as (
+    select v.*,
+      (select count(*) from recruit_likes rl where rl.post_id = v.id) as like_count,
+      (case when v.is_friend then 2.0 else 0 end)
+      + (case when v.school is not null and v.school = (select school from me) then 1.0 else 0 end)
+      + least(1.5, 0.3 * (select count(*) from recruit_likes rl where rl.post_id = v.id))
+      + greatest(0, 3.0 - extract(epoch from (now() - v.created_at)) / 86400.0)
+      + 2.0 * (('x' || substr(md5(v.id::text || p_seed::text), 1, 8))::bit(32)::bigint::double precision / 4294967295.0)
+      as score
+    from visible v
+  )
+  select id, user_id, role, note, created_at, name, school, avatar_url, like_count, is_friend
+  from scored
+  order by score desc
+  limit greatest(1, least(50, p_limit));
+$$;
+grant execute on function get_recruit_feed(text[], double precision, int, text) to authenticated;
+
+-- get_leaderboards: exclude non-zh sessions
+create or replace function get_leaderboards()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_result jsonb := '{}'::jsonb;
+  v_entries jsonb;
+  v_position int;
+  v_self uuid := auth.uid();
+  v_self_name text;
+  v_self_username text;
+  v_self_avatar text;
+  v_self_points int;
+  v_self_rank int;
+  v_self_matches int;
+  v_self_mvp_count int;
+  v_total_matches int := 0;
+  v_total_mvp_count int := 0;
+  v_self_result jsonb;
+begin
+  select name, username, avatar_url
+    into v_self_name, v_self_username, v_self_avatar
+    from profiles where id = v_self;
+
+  v_self_result := jsonb_build_object(
+    'name', v_self_name, 'username', v_self_username, 'avatar_url', v_self_avatar
+  );
+
+  for v_position in 1..4 loop
+    with pos_points as (
+      select
+        p.id as profile_id,
+        sum(
+          100
+            + case when s.won then 100 else 0 end
+            + case when coalesce(s.mvp_flags[v_position], false) then 100 else 0 end
+        )::int as points
+      from sessions s
+      join profiles p
+        on p.username = lower(substring(s.debaters[v_position] from '^@(\S+)'))
+      where s.debaters[v_position] ~ '^@\S+'
+        and coalesce(s.language, 'zh') = 'zh'
+      group by p.id
+    ),
+    ranked as (
+      select *, row_number() over (order by points desc, profile_id) as rn
+      from pos_points
+    )
+    select
+      coalesce(jsonb_agg(jsonb_build_object(
+        'id', pr.id, 'username', pr.username, 'name', pr.name,
+        'avatar_url', pr.avatar_url, 'is_public', pr.is_public, 'points', ranked.points
+      ) order by ranked.points desc, pr.id), '[]'::jsonb),
+      (select points from ranked where profile_id = v_self),
+      (select rn from ranked where profile_id = v_self)
+    into v_entries, v_self_points, v_self_rank
+    from ranked
+    join profiles pr on pr.id = ranked.profile_id
+    where ranked.rn <= 50;
+
+    select
+      count(*)::int,
+      coalesce(sum(case when coalesce(s.mvp_flags[v_position], false) then 1 else 0 end), 0)::int
+    into v_self_matches, v_self_mvp_count
+    from sessions s
+    where lower(substring(s.debaters[v_position] from '^@(\S+)')) = v_self_username
+      and coalesce(s.language, 'zh') = 'zh';
+
+    v_total_matches := v_total_matches + v_self_matches;
+    v_total_mvp_count := v_total_mvp_count + v_self_mvp_count;
+
+    v_result := v_result || jsonb_build_object(v_position::text, v_entries);
+    v_self_result := v_self_result || jsonb_build_object(
+      v_position::text,
+      jsonb_build_object(
+        'rank', v_self_rank, 'points', coalesce(v_self_points, 0),
+        'matches', v_self_matches, 'mvp_count', v_self_mvp_count
+      )
+    );
+  end loop;
+
+  with slot_points as (
+    select
+      p.id as profile_id,
+      100
+        + case when s.won then 100 else 0 end
+        + case when coalesce(s.mvp_flags[gs.i], false) then 100 else 0 end
+        as points
+    from sessions s
+    cross join generate_series(1, 4) as gs(i)
+    join profiles p
+      on p.username = lower(substring(s.debaters[gs.i] from '^@(\S+)'))
+    where s.debaters[gs.i] ~ '^@\S+'
+      and coalesce(s.language, 'zh') = 'zh'
+  ),
+  overall_points as (
+    select profile_id, sum(points)::int as points
+    from slot_points
+    group by profile_id
+  ),
+  ranked as (
+    select *, row_number() over (order by points desc, profile_id) as rn
+    from overall_points
+  )
+  select
+    coalesce(jsonb_agg(jsonb_build_object(
+      'id', pr.id, 'username', pr.username, 'name', pr.name,
+      'avatar_url', pr.avatar_url, 'is_public', pr.is_public, 'points', ranked.points
+    ) order by ranked.points desc, pr.id), '[]'::jsonb),
+    (select points from ranked where profile_id = v_self),
+    (select rn from ranked where profile_id = v_self)
+  into v_entries, v_self_points, v_self_rank
+  from ranked
+  join profiles pr on pr.id = ranked.profile_id
+  where ranked.rn <= 50;
+
+  v_result := v_result || jsonb_build_object('overall', v_entries);
+  v_self_result := v_self_result || jsonb_build_object(
+    'overall',
+    jsonb_build_object(
+      'rank', v_self_rank, 'points', coalesce(v_self_points, 0),
+      'matches', v_total_matches, 'mvp_count', v_total_mvp_count
+    )
+  );
+
+  v_result := v_result || jsonb_build_object('self', v_self_result);
+  return v_result;
+end;
+$$;
+
+grant execute on function get_leaderboards() to authenticated;
+
+notify pgrst, 'reload schema';
