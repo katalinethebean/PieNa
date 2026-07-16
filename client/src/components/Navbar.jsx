@@ -287,11 +287,10 @@ export default function Navbar() {
       padding: '0 32px',
     }}>
       {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginRight: '40px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginRight: '40px', flexShrink: 0 }}>
         <Link to="/discover" style={{ textDecoration: 'none' }}>
           <img src="/favicon.png" alt="撇捺" style={{ width: '28px', height: '28px', display: 'block' }} />
         </Link>
-        {!guest && <OnboardingButton />}
       </div>
 
       {/* Nav tabs */}
@@ -319,7 +318,10 @@ export default function Navbar() {
 
       {/* Right section: universe toggle + notification bell + profile avatar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, marginLeft: '40px' }}>
-        <UniverseToggle lang={lang} setLang={setLang} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <UniverseToggle lang={lang} setLang={setLang} />
+          {!guest && <OnboardingButton />}
+        </div>
         {guest ? (
           <motion.button
             whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
