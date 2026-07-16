@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useReviewJob } from '../contexts/ReviewJobContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import ConfirmModal from '../components/ConfirmModal';
 import { useIsMobile } from '../lib/useIsMobile';
 
@@ -244,6 +245,7 @@ export default function Review() {
   const navigate = useNavigate();
 
   const { jobs, activeJobId, setActiveJobId, startJob, removeJob, updateJob } = useReviewJob();
+  const { t } = useLanguage();
   const job = jobs.find(j => j.id === activeJobId) || null;
   const result = job?.status === 'done' ? job.result : null;
   const savedId = job?.savedId || null;
@@ -546,7 +548,7 @@ export default function Review() {
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}
       >
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#2C3025', marginBottom: '4px' }}>复盘分析</h1>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#2C3025', marginBottom: '4px' }}>{t('review.title')}</h1>
           <p style={{ fontSize: '12px', color: '#9a8570', margin: 0 }}>所有分析与评分仅供参考。</p>
         </div>
         <motion.button
@@ -560,7 +562,7 @@ export default function Review() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
-          历史记录
+          {t('review.history') ?? '历史记录'}
         </motion.button>
       </motion.div>
 
@@ -608,7 +610,7 @@ export default function Review() {
             cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em',
           }}
         >
-          开始复盘分析
+          {t('review.start')}
         </motion.button>
       </div>
 

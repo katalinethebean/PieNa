@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { useFriend } from '../contexts/FriendContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, isConfigured } from '../lib/supabase';
 import { sendMatchInvites } from '../lib/utils';
 
@@ -173,6 +174,7 @@ export default function RecordMatch() {
   });
 
   const selfUser = { id: selfId, name: selfName, username: selfUsername, team: selfTeam };
+  const { lang, t } = useLanguage();
 
   const setDebater = (i, v) => {
     setForm(f => {
@@ -223,12 +225,12 @@ export default function RecordMatch() {
       setSaving(true);
       const { data, error: insertError } = await supabase
         .from('sessions')
-        .insert({ ...payload, user_id: selfId })
+        .insert({ ...payload, user_id: selfId, language: lang })
         .select()
         .single();
       setSaving(false);
       if (insertError) {
-        setError('保存失败，请重试');
+        setError(t('record.error'));
         return;
       }
       addSession(data);
@@ -250,7 +252,7 @@ export default function RecordMatch() {
               <path d="M20 6L9 17l-5-5"/>
             </svg>
           </div>
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#2C3025', marginBottom: '8px' }}>比赛已记录</h2>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#2C3025', marginBottom: '8px' }}>{t('record.saved')}</h2>
           <p style={{ fontSize: '13px', color: '#7d6b55', lineHeight: 1.7, marginBottom: '6px' }}>{form.motion}</p>
           {form.tournament && <p style={{ fontSize: '11px', color: '#9a8570', marginBottom: '4px' }}>{form.tournament}</p>}
           <p style={{ fontSize: '12px', color: '#9a8570', marginBottom: '28px' }}>
@@ -278,7 +280,7 @@ export default function RecordMatch() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 240, damping: 24 }}>
         <div style={{ marginBottom: '28px' }}>
           <button type="button" onClick={() => navigate(-1)} style={{ fontSize: '12px', color: '#9a8570', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginBottom: '12px', display: 'block' }}>← 返回</button>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#2C3025', marginBottom: '4px' }}>记录比赛</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#2C3025', marginBottom: '4px' }}>{t('record.title')}</h1>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -286,13 +288,13 @@ export default function RecordMatch() {
 
             {/* Date */}
             <div>
-              <label style={labelStyle}>比赛日期 *</label>
+              <label style={labelStyle}>{t('record.date')} *</label>
               <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} style={inputStyle} required />
             </div>
 
             {/* Tournament */}
             <div>
-              <label style={labelStyle}>赛事名称</label>
+              <label style={labelStyle}>{t('record.tournament')}</label>
               <input
                 value={form.tournament}
                 onChange={e => setForm(f => ({ ...f, tournament: e.target.value }))}
@@ -303,7 +305,7 @@ export default function RecordMatch() {
 
             {/* Motion */}
             <div>
-              <label style={labelStyle}>辩题 *</label>
+              <label style={labelStyle}>{t('record.motion')} *</label>
               <input
                 value={form.motion}
                 onChange={e => setForm(f => ({ ...f, motion: e.target.value }))}
@@ -315,13 +317,13 @@ export default function RecordMatch() {
 
             {/* Side */}
             <div>
-              <label style={labelStyle}>我方持方 *</label>
+              <label style={labelStyle}>{t('record.result')} *</label>
               <SideToggle value={form.side} onChange={v => setForm(f => ({ ...f, side: v }))} />
             </div>
 
             {/* Scores */}
             <div>
-              <label style={labelStyle}>比分</label>
+              <label style={labelStyle}>{t('report.score')}</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: '10px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.04em' }}>正方</p>
@@ -361,7 +363,7 @@ export default function RecordMatch() {
 
             {/* Debaters — my team's 4 */}
             <div>
-              <label style={labelStyle}>我方辩手（输入用户名查找已注册的撇捺用户）</label>
+              <label style={labelStyle}>{t('record.debaters')}</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {['一辩', '二辩', '三辩', '四辩'].map((pos, i) => (
                   <div key={i}>
@@ -388,7 +390,7 @@ export default function RecordMatch() {
 
             {/* Notes */}
             <div>
-              <label style={labelStyle}>备注</label>
+              <label style={labelStyle}>{t('record.notes')}</label>
               <textarea
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
@@ -416,7 +418,7 @@ export default function RecordMatch() {
               letterSpacing: '0.04em', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
             }}
           >
-            {saving ? '保存中…' : '保存比赛记录'}
+            {saving ? t('record.saving') : t('record.submit')}
           </motion.button>
         </form>
       </motion.div>

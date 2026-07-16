@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useRef, useCallback, useEffect } f
 import { supabase, isConfigured } from '../lib/supabase';
 import { API_URL, sendMatchInvites } from '../lib/utils';
 import { useUser } from './UserContext';
+import { useLanguage } from './LanguageContext';
 
 // 分析任务的全局状态：任务在后端跑，前端轮询进度。
 // 两种任务共用一套进度界面与悬浮卡片：
@@ -52,6 +53,7 @@ function buildSessionPayload(matchPayload, result) {
 
 export function ReviewJobProvider({ children }) {
   const { id: selfId, username: selfUsername, addSession } = useUser();
+  const { lang } = useLanguage();
   const [jobs, setJobs] = useState([]);
   const [activeJobId, setActiveJobId] = useState(null);
   const jobsRef = useRef(jobs);
@@ -103,7 +105,7 @@ export function ReviewJobProvider({ children }) {
         let reportId;
         if (isConfigured && selfId) {
           const { data, error } = await supabase
-            .from('sessions').insert({ ...payload, user_id: selfId }).select().single();
+            .from('sessions').insert({ ...payload, user_id: selfId, language: lang }).select().single();
           if (error) throw new Error('保存分析结果失败：' + error.message);
           reportId = data.id;
           addSession(data);

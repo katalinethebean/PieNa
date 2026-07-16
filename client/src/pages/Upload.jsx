@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { useFriend } from '../contexts/FriendContext';
 import { useReviewJob } from '../contexts/ReviewJobContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, isConfigured } from '../lib/supabase';
 import { sendMatchInvites } from '../lib/utils';
 
@@ -210,6 +211,7 @@ export default function Upload() {
 
   const selfUser = { id: selfId, name: selfName, username: selfUsername, team: selfTeam };
   const { startJob } = useReviewJob();
+  const { lang, t } = useLanguage();
 
   // Derive position from whichever debater slot contains @selfUsername + the side toggle
   function derivePosition() {
@@ -304,7 +306,7 @@ export default function Upload() {
           let id;
           if (isConfigured && selfId) {
             const { data, error: insertError } = await supabase
-              .from('sessions').insert({ ...payload, user_id: selfId }).select().single();
+              .from('sessions').insert({ ...payload, user_id: selfId, language: lang }).select().single();
             if (insertError) { setLoading(false); setError('保存分析结果失败，请重试'); return; }
             id = data.id;
             addSession(data);

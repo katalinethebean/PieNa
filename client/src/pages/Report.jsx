@@ -5,6 +5,7 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 import { useUser } from '../contexts/UserContext';
 import { formatChineseDate } from '../lib/utils';
 import { supabase } from '../lib/supabase';
+import { useLanguage } from '../contexts/LanguageContext';
 import ConfirmModal from '../components/ConfirmModal';
 import EditMatchModal from '../components/EditMatchModal';
 import { useIsMobile } from '../lib/useIsMobile';
@@ -129,6 +130,7 @@ export default function Report() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { sessions, updateSession, removeSession } = useUser();
+  const { t } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const isMobile = useIsMobile();
@@ -179,9 +181,9 @@ export default function Report() {
         {deleting && (
           <ConfirmModal
             key="delete-match"
-            title="删除比赛记录"
-            message="确定要删除这场比赛记录吗？此操作不可撤销。"
-            confirmLabel="删除"
+            title={t('report.delete')}
+            message={t('report.delete_confirm')}
+            confirmLabel={t('common.delete')}
             danger
             onCancel={() => setDeleting(false)}
             onConfirm={async () => {
@@ -208,7 +210,7 @@ export default function Report() {
             </button>
             <button onClick={() => setDeleting(true)} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: '#a03030', fontSize: '12px', fontFamily: 'inherit', padding: 0 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
-              删除
+              {t('common.delete')}
             </button>
           </div>
         </motion.div>
@@ -337,7 +339,7 @@ export default function Report() {
         {/* AI 总结（旧版分析只有 feedback 字段，没有 justification.match_summary） */}
         {hasAnalysis && (j.match_summary || s.feedback) && (
           <motion.div variants={itemVariant} className="dark-glass-card" style={{ padding: '24px 28px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '10px', fontWeight: 700, color: '#a4b9b5', letterSpacing: '0.14em', marginBottom: '14px' }}>AI 总结</p>
+            <p style={{ fontSize: '10px', fontWeight: 700, color: '#a4b9b5', letterSpacing: '0.14em', marginBottom: '14px' }}>{t('report.analysis')}</p>
             <p style={{ fontSize: '13px', color: 'rgba(235,223,203,0.85)', lineHeight: '1.9', letterSpacing: '0.02em', margin: 0, whiteSpace: 'pre-wrap' }}>
               {j.match_summary || s.feedback}
             </p>
