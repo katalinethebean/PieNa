@@ -10,12 +10,14 @@ import LoginPromptModal from '../components/LoginPromptModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DebaterModal from '../components/DebaterModal';
 import { useIsMobile } from '../lib/useIsMobile';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const spring = { type: 'spring', stiffness: 300, damping: 22 };
 
 // ─── Left rail ───────────────────────────────────────────────────────────────
 
 function MiniProfile() {
+  const { t } = useLanguage();
   const { friends } = useFriend();
   const { name, avatarUrl, avg_score, sessions } = useUser();
   const winRate = sessions && sessions.length > 0
@@ -36,13 +38,13 @@ function MiniProfile() {
         <p style={{ fontSize: '18px', fontWeight: 700, color: '#2C3025', marginBottom: '18px' }}>{name || '—'}</p>
         <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
           {[
-            { v: displayAvg, l: '均分' },
+            { v: displayAvg, l: t('profile.avg_score') },
             { v: sessions?.length ?? 0, l: '场次' },
-            { v: friends.length, l: '好友' },
-            { v: `${winRate}%`, l: '胜率' },
+            { v: friends.length, l: t('profile.friends') },
+            { v: `${winRate}%`, l: t('profile.win_rate') },
           ].map(({ v, l }) => (
             <div key={l} style={{ textAlign: 'center' }}>
-              <span style={{ fontSize: '22px', fontWeight: 700, color: '#7d9b96', display: 'block' }}>{v}</span>
+              <span style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-sage-dark)', display: 'block' }}>{v}</span>
               <span style={{ fontSize: '12px', color: '#9a8570', letterSpacing: '0.06em' }}>{l}</span>
             </div>
           ))}
@@ -50,7 +52,7 @@ function MiniProfile() {
         <Link to="/me" style={{ textDecoration: 'none', width: '100%' }}>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             style={{ width: '100%', padding: '11px', textAlign: 'center', background: 'rgba(44,48,37,0.08)', border: '1px solid rgba(44,48,37,0.18)', borderRadius: '20px', fontSize: '13px', fontWeight: 600, color: '#2C3025', letterSpacing: '0.04em', cursor: 'pointer' }}>
-            查看我的档案
+            {t('profile.view')}
           </motion.div>
         </Link>
       </div>
@@ -74,6 +76,7 @@ function formatRank(rank) {
 const RANK_COLUMNS = '0.9fr 0.65fr 0.65fr 0.75fr 0.95fr';
 
 function LeaderboardCard() {
+  const { t } = useLanguage();
   const [self, setSelf] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -86,9 +89,9 @@ function LeaderboardCard() {
 
   return (
     <div className="glass-card" style={{ padding: '20px', marginBottom: '12px' }}>
-      <p style={{ fontSize: '12px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.1em', marginBottom: '14px' }}>我的撇捺积分</p>
+      <p style={{ fontSize: '12px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.1em', marginBottom: '14px' }}>{t('discover.my_points')}</p>
       {loading ? (
-        <p style={{ fontSize: '12px', color: '#9a8570', textAlign: 'center', padding: '12px 0' }}>加载中…</p>
+        <p style={{ fontSize: '12px', color: '#9a8570', textAlign: 'center', padding: '12px 0' }}>{t('discover.loading')}</p>
       ) : (
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: RANK_COLUMNS, gap: '2px', paddingBottom: '6px', marginBottom: '2px', borderBottom: '1px solid rgba(200,184,154,0.4)' }}>
@@ -103,7 +106,7 @@ function LeaderboardCard() {
                 <span style={{ fontSize: '12px', fontWeight: 600, color: '#2C3025' }}>{b.label}</span>
                 <span style={{ fontSize: '12px', color: '#6b5c45', textAlign: 'center' }}>{entry?.matches ?? 0}</span>
                 <span style={{ fontSize: '12px', color: '#6b5c45', textAlign: 'center' }}>{entry?.mvp_count ?? 0}</span>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#5a8f7a', textAlign: 'center' }}>{entry?.points ?? 0}</span>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-success)', textAlign: 'center' }}>{entry?.points ?? 0}</span>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#c07a3a', textAlign: 'center' }}>{formatRank(entry?.rank)}</span>
               </div>
             );
@@ -112,7 +115,7 @@ function LeaderboardCard() {
       )}
       <Link to="/leaderboard" style={{ textDecoration: 'none' }}>
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-          style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid rgba(200,184,154,0.3)', textAlign: 'center', fontSize: '12px', color: '#7d9b96', fontWeight: 600, letterSpacing: '0.04em', cursor: 'pointer' }}>
+          style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid rgba(200,184,154,0.3)', textAlign: 'center', fontSize: '12px', color: 'var(--color-sage-dark)', fontWeight: 600, letterSpacing: '0.04em', cursor: 'pointer' }}>
           查看总榜 →
         </motion.div>
       </Link>
@@ -123,6 +126,7 @@ function LeaderboardCard() {
 // ─── Right rail ───────────────────────────────────────────────────────────────
 
 function PeopleSuggestions({ onShowMore }) {
+  const { lang, t } = useLanguage();
   const { friends, sentRequests, receivedRequests, sendRequest } = useFriend();
   const { id: selfId } = useUser();
   const [suggestions, setSuggestions] = useState([]);
@@ -139,7 +143,7 @@ function PeopleSuggestions({ onShowMore }) {
 
   return (
     <div className="glass-card" style={{ padding: '20px', flexShrink: 0 }}>
-      <p style={{ fontSize: '12px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.1em', marginBottom: '16px' }}>你可能认识</p>
+      <p style={{ fontSize: '12px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.1em', marginBottom: '16px' }}>{t('discover.people_know')}</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         {slots.map((d, i) => d ? (
           <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -152,7 +156,7 @@ function PeopleSuggestions({ onShowMore }) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: '13px', fontWeight: 600, color: '#2C3025', marginBottom: '1px' }}>{d.name}</p>
                 <p style={{ fontSize: '10px', color: '#9a8570', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {d.mutual_count > 0 ? `${d.mutual_count} 位共同好友` : ''}{d.mutual_count > 0 && d.same_school ? ' · ' : ''}{d.same_school ? '同校' : d.school || ''}
+                  {d.mutual_count > 0 ? t('discover.mutual_friends', { count: d.mutual_count }) : ''}{d.mutual_count > 0 && d.same_school ? ' · ' : ''}{d.same_school ? t('discover.same_school') : d.school || ''}
                 </p>
               </div>
             </Link>
@@ -160,22 +164,22 @@ function PeopleSuggestions({ onShowMore }) {
               {friends.includes(d.id) ? (
                 <span style={{ fontSize: '11px', color: '#5a8f7a' }}>✓</span>
               ) : sentRequests.includes(d.id) ? (
-                <span style={{ fontSize: '10px', color: '#c8b89a' }}>已发送</span>
+                <span style={{ fontSize: '10px', color: '#c8b89a' }}>{t('discover.friend_sent')}</span>
               ) : receivedRequests.includes(d.id) ? (
-                <button onClick={() => {}} style={{ fontSize: '10px', color: '#c07a3a', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>接受</button>
+                <button onClick={() => {}} style={{ fontSize: '10px', color: '#c07a3a', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{t('discover.friend_accept')}</button>
               ) : greetingFor === d.id ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '130px' }}>
                   <input autoFocus value={greetingDraft} onChange={e => setGreetingDraft(e.target.value.slice(0, 20))}
-                    placeholder="打个招呼（可选）" maxLength={20}
+                    placeholder={t('discover.say_hi')} maxLength={20}
                     onKeyDown={e => { if (e.key === 'Enter') { sendRequest(d.id, greetingDraft); setGreetingFor(null); } if (e.key === 'Escape') setGreetingFor(null); }}
                     style={{ padding: '4px 7px', border: '1px solid rgba(125,155,150,0.4)', borderRadius: '5px', fontSize: '10px', outline: 'none', fontFamily: 'inherit', background: 'rgba(255,255,255,0.7)', color: '#2C3025' }} />
                   <div style={{ display: 'flex', gap: '3px' }}>
-                    <button onClick={() => { sendRequest(d.id, greetingDraft); setGreetingFor(null); }} style={{ flex: 1, padding: '3px', fontSize: '9px', fontWeight: 600, background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '4px', cursor: 'pointer', fontFamily: 'inherit' }}>发送</button>
+                    <button onClick={() => { sendRequest(d.id, greetingDraft); setGreetingFor(null); }} style={{ flex: 1, padding: '3px', fontSize: '9px', fontWeight: 600, background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '4px', cursor: 'pointer', fontFamily: 'inherit' }}>{t('discover.send')}</button>
                     <button onClick={() => setGreetingFor(null)} style={{ padding: '3px 5px', fontSize: '9px', background: 'transparent', color: '#9a8570', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '4px', cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
                   </div>
                 </div>
               ) : (
-                <button onClick={() => { setGreetingFor(d.id); setGreetingDraft(''); }} style={{ fontSize: '10px', color: '#7d9b96', background: 'none', border: '1px solid rgba(125,155,150,0.35)', padding: '3px 8px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>+ 加好友</button>
+                <button onClick={() => { setGreetingFor(d.id); setGreetingDraft(''); }} style={{ fontSize: '10px', color: 'var(--color-sage-dark)', background: 'none', border: '1px solid rgba(125,155,150,0.35)', padding: '3px 8px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>{t('discover.add_friend')}</button>
               )}
             </div>
           </div>
@@ -189,14 +193,15 @@ function PeopleSuggestions({ onShowMore }) {
           </div>
         ))}
       </div>
-      <button onClick={onShowMore} style={{ width: '100%', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(200,184,154,0.3)', textAlign: 'center', fontSize: '12px', color: '#7d9b96', fontWeight: 600, letterSpacing: '0.04em', cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'inherit' }}>
-        发现更多辩手 →
+      <button onClick={onShowMore} style={{ width: '100%', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(200,184,154,0.3)', textAlign: 'center', fontSize: '12px', color: 'var(--color-sage-dark)', fontWeight: 600, letterSpacing: '0.04em', cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'inherit' }}>
+        {t('discover.find_more')}
       </button>
     </div>
   );
 }
 
 function EditRecruitModal({ post, onClose, onSaved }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState({ role: post.role || ROLE_OPTIONS[0], note: post.note || '' });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -209,7 +214,7 @@ function EditRecruitModal({ post, onClose, onSaved }) {
     setSaving(true);
     const { error: err } = await supabase.from('recruit_posts').update({ role: form.role, note: form.note.trim() }).eq('id', post.id);
     setSaving(false);
-    if (err) { setError('保存失败，请重试'); return; }
+    if (err) { setError(t('recruit.save_error')); return; }
     onSaved({ ...post, role: form.role, note: form.note.trim() });
   };
 
@@ -222,22 +227,22 @@ function EditRecruitModal({ post, onClose, onSaved }) {
         className="glass-card" style={{ width: '100%', maxWidth: '480px', padding: 0, overflow: 'hidden', background: 'rgba(248,244,238,0.97)' }}
         onClick={e => e.stopPropagation()}>
         <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid rgba(200,184,154,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025' }}>编辑招募帖</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025' }}>{t('recruit.edit_title')}</h2>
           <button onClick={onClose} style={{ background: 'rgba(200,184,154,0.3)', border: '1px solid rgba(200,184,154,0.4)', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', fontSize: '13px', color: '#5a4a3a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
         <form onSubmit={handleSubmit} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#5a4a3a', display: 'block', marginBottom: '6px' }}>身份 *</label>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#5a4a3a', display: 'block', marginBottom: '6px' }}>{t('recruit.role_label')}</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {ROLE_OPTIONS.map(r => (
                 <div key={r} onClick={() => setForm(f => ({ ...f, role: r }))}
-                  style={{ padding: '7px 14px', borderRadius: '16px', fontSize: '12px', cursor: 'pointer', fontWeight: 600, border: form.role === r ? '1px solid #2C3025' : '1px solid rgba(200,184,154,0.5)', background: form.role === r ? '#2C3025' : 'rgba(255,255,255,0.65)', color: form.role === r ? '#E8E4DC' : '#5a4a3a' }}>{r}</div>
+                  style={{ padding: '7px 14px', borderRadius: '16px', fontSize: '12px', cursor: 'pointer', fontWeight: 600, border: form.role === r ? '1px solid #2C3025' : '1px solid rgba(200,184,154,0.5)', background: form.role === r ? '#2C3025' : 'rgba(255,255,255,0.65)', color: form.role === r ? '#E8E4DC' : '#5a4a3a' }}>{t('role.' + r)}</div>
               ))}
             </div>
           </div>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#5a4a3a' }}>详情 *</label>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#5a4a3a' }}>{t('recruit.note_label')}</label>
               <span style={{ fontSize: '11px', color: form.note.length >= 500 ? '#c0392b' : '#9a8570' }}>{form.note.length}/500</span>
             </div>
             <textarea required maxLength={500} value={form.note} onChange={set('note')} rows={4} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
@@ -245,7 +250,7 @@ function EditRecruitModal({ post, onClose, onSaved }) {
           {error && <p style={{ fontSize: '12px', color: '#c0392b', textAlign: 'center' }}>{error}</p>}
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} type="submit" disabled={saving}
             style={{ padding: '11px', background: saving ? '#9a8570' : '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-            {saving ? '保存中…' : '保存修改'}
+            {saving ? t('recruit.saving') : t('recruit.save')}
           </motion.button>
         </form>
       </motion.div>
@@ -254,6 +259,7 @@ function EditRecruitModal({ post, onClose, onSaved }) {
 }
 
 function MyRecruits({ refreshKey, onPostChange }) {
+  const { lang, t } = useLanguage();
   const { id: selfId } = useUser();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -316,11 +322,11 @@ function MyRecruits({ refreshKey, onPostChange }) {
       )}
     </AnimatePresence>
     <div className="glass-card" style={{ padding: '20px', marginTop: '12px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-      <p style={{ fontSize: '12px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.1em', marginBottom: '16px', flexShrink: 0 }}>我的招募</p>
+      <p style={{ fontSize: '12px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.1em', marginBottom: '16px', flexShrink: 0 }}>{t('discover.my_recruits')}</p>
       {loading ? (
-        <p style={{ fontSize: '12px', color: '#9a8570', textAlign: 'center', padding: '12px 0' }}>加载中…</p>
+        <p style={{ fontSize: '12px', color: '#9a8570', textAlign: 'center', padding: '12px 0' }}>{t('discover.loading')}</p>
       ) : sorted.length === 0 ? (
-        <p style={{ fontSize: '12px', color: '#9a8570', textAlign: 'center', padding: '12px 0' }}>还没有发布过招募</p>
+        <p style={{ fontSize: '12px', color: '#9a8570', textAlign: 'center', padding: '12px 0' }}>{t('discover.no_my_recruits')}</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '2px' }}>
           <AnimatePresence initial={false}>
@@ -341,9 +347,9 @@ function MyRecruits({ refreshKey, onPostChange }) {
                     padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 600,
                     background: p.archived ? 'rgba(154,133,112,0.18)' : 'rgba(90,143,122,0.14)',
                     color: p.archived ? '#8a7560' : '#5a8f7a',
-                  }}>{p.role || '其他'}{p.archived ? ' · 已归档' : ''}</span>
+                  }}>{t('role.' + (p.role || '其他'))}{p.archived ? ' · ' + t('discover.archived_badge') : ''}</span>
                   <span style={{ fontSize: '10px', color: '#9a8570', flexShrink: 0 }}>
-                    {new Date(p.created_at).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}
+                    {new Date(p.created_at).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', { month: 'numeric', day: 'numeric' })}
                   </span>
                 </div>
                 <p style={{
@@ -362,7 +368,7 @@ function MyRecruits({ refreshKey, onPostChange }) {
                   </motion.button>
                   <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                     onClick={() => toggleArchive(p.id, !p.archived)}
-                    title={p.archived ? '取消归档' : '归档'}
+                    title={p.archived ? t('discover.unarchive') : t('discover.archive')}
                     style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(200,184,154,0.3)', border: '1px solid rgba(200,184,154,0.45)', borderRadius: '7px', cursor: 'pointer', color: '#7d6b55', padding: 0 }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v9a2 2 0 002 2h10a2 2 0 002-2V9"/><path d="M10 13h4"/>
@@ -489,6 +495,7 @@ function TournamentsTab() {
 const ROLE_OPTIONS = ['找队友', '找评委', '找教练', '其他'];
 
 function RecruitModal({ onClose, onPosted }) {
+  const { lang, t } = useLanguage();
   const { id: userId } = useUser();
   const [form, setForm] = useState({ role: ROLE_OPTIONS[0], note: '' });
   const [submitted, setSubmitted] = useState(false);
@@ -503,8 +510,9 @@ function RecruitModal({ onClose, onPosted }) {
       user_id: userId,
       role: form.role,
       note: form.note.trim(),
+      language: lang,
     });
-    if (err) { setError('发布失败，请重试'); return; }
+    if (err) { setError(t('recruit.error')); return; }
     setSubmitted(true);
     onPosted?.();
   };
@@ -533,7 +541,7 @@ function RecruitModal({ onClose, onPosted }) {
       >
         <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid rgba(200,184,154,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', marginBottom: '2px' }}>发起招募</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', marginBottom: '2px' }}>{t('recruit.title')}</h2>
             <p style={{ fontSize: '11px', color: '#7d6b55' }}>发布招募帖，找到你的辩论搭档</p>
           </div>
           <button onClick={onClose} style={{ background: 'rgba(200,184,154,0.3)', border: '1px solid rgba(200,184,154,0.4)', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', fontSize: '13px', color: '#5a4a3a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
@@ -552,7 +560,7 @@ function RecruitModal({ onClose, onPosted }) {
         ) : (
           <form onSubmit={handleSubmit} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#5a4a3a', display: 'block', marginBottom: '6px' }}>身份 *</label>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#5a4a3a', display: 'block', marginBottom: '6px' }}>{t('recruit.role_label')}</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {ROLE_OPTIONS.map(r => (
                   <div key={r} onClick={() => setForm(f => ({ ...f, role: r }))}
@@ -563,23 +571,23 @@ function RecruitModal({ onClose, onPosted }) {
                       background: form.role === r ? '#2C3025' : 'rgba(255,255,255,0.65)',
                       color: form.role === r ? '#E8E4DC' : '#5a4a3a',
                     }}>
-                    {r}
+                    {t('role.' + r)}
                   </div>
                 ))}
               </div>
             </div>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#5a4a3a' }}>详情 *</label>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: '#5a4a3a' }}>{t('recruit.note_label')}</label>
                 <span style={{ fontSize: '11px', color: form.note.length >= 500 ? '#c0392b' : '#9a8570' }}>{form.note.length}/500</span>
               </div>
-              <textarea required maxLength={500} value={form.note} onChange={set('note')} placeholder="赛事、招募辩位、要求、时间安排等…" rows={4}
+              <textarea required maxLength={500} value={form.note} onChange={set('note')} placeholder={t('recruit.note_placeholder')} rows={4}
                 style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
             </div>
             {error && <p style={{ fontSize: '12px', color: '#c0392b', textAlign: 'center' }}>{error}</p>}
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} type="submit"
               style={{ padding: '11px', background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
-              发布招募帖
+              {t('recruit.submit')}
             </motion.button>
           </form>
         )}
@@ -589,6 +597,7 @@ function RecruitModal({ onClose, onPosted }) {
 }
 
 function RecruitPostModal({ post, onClose, guest, onRequireLogin }) {
+  const { t } = useLanguage();
   const guardProfileClick = (e) => {
     if (guest) { e.preventDefault(); onRequireLogin?.(); return; }
     onClose();
@@ -623,7 +632,7 @@ function RecruitPostModal({ post, onClose, guest, onRequireLogin }) {
                 <Link to={`/profile/${post.user_id}`} onClick={guardProfileClick} style={{ textDecoration: 'none', minWidth: 0 }}>
                   <p style={{ fontSize: '14px', fontWeight: 700, color: '#2C3025', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{post.profiles?.name}</p>
                 </Link>
-                <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 600, background: 'rgba(90,143,122,0.14)', color: '#5a8f7a', flexShrink: 0 }}>{post.role || '其他'}</span>
+                <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 600, background: 'rgba(90,143,122,0.14)', color: '#5a8f7a', flexShrink: 0 }}>{t('role.' + (post.role || '其他'))}</span>
               </div>
               {post.profiles?.school && <p style={{ fontSize: '11px', color: '#9a8570' }}>{post.profiles.school}</p>}
             </div>
@@ -641,6 +650,7 @@ function RecruitPostModal({ post, onClose, guest, onRequireLogin }) {
 const FEED_FILTERS = ['全部', '我的', '好友', '找队友', '找评委', '找教练', '其他'];
 
 function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChange }) {
+  const { lang, t } = useLanguage();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openPost, setOpenPost] = useState(null);
@@ -658,6 +668,7 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChan
       p_roles: filters.length ? filters : null,
       p_seed: seed,
       p_limit: 15,
+      p_lang: lang,
     });
     // RPC 返回扁平字段，映射回卡片期望的 profiles 结构
     const posts = (postData || []).map(r => ({
@@ -677,7 +688,7 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChan
     setLoading(false);
   };
 
-  useEffect(() => { loadPosts(); }, [refreshKey, filters, seed]);
+  useEffect(() => { loadPosts(); }, [refreshKey, filters, seed, lang]);
 
   const toggleFilter = (f) => {
     if (f === '全部') { setFilters([]); return; }
@@ -718,14 +729,14 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChan
                 background: active ? '#2C3025' : 'rgba(44,48,37,0.06)',
                 color: active ? '#E8E4DC' : '#7d6b55',
                 whiteSpace: 'nowrap',
-              }}>{f}</button>
+              }}>{t('filter.' + f)}</button>
           );
         })}
       </div>
       {!filters.includes('我的') && (
         <motion.button
           whileHover={{ rotate: 90 }} whileTap={{ scale: 0.85 }} onClick={refresh}
-          title="换一批"
+          title={t('discover.refresh')}
           style={{ flexShrink: 0, width: '32px', height: '32px', borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'rgba(44,48,37,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5a4a3a' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
@@ -745,7 +756,7 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChan
   if (loading) return (
     <div>
       {filterBar}
-      <p style={{ textAlign: 'center', padding: '48px 0', fontSize: '13px', color: '#9a8570' }}>加载中…</p>
+      <p style={{ textAlign: 'center', padding: '48px 0', fontSize: '13px', color: '#9a8570' }}>{t('discover.loading')}</p>
     </div>
   );
 
@@ -754,9 +765,9 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChan
       {filterBar}
       <EmptyState
         icon="🤝"
-        title={filters.length === 0 ? '还没有招募帖' : '没有符合筛选的招募'}
-        sub={filters.length === 0 ? '成为第一个发起招募的人，找到你的辩论搭档' : '试试切换其他分类，或换一批看看'}
-        action="发起招募"
+        title={filters.length === 0 ? t('discover.no_posts') : t('discover.no_match')}
+        sub={filters.length === 0 ? t('discover.be_first') : t('discover.try_other')}
+        action={t('recruit.title')}
         onAction={onRecruit}
       />
     </div>
@@ -787,9 +798,9 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChan
                 </Link>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, background: 'rgba(90,143,122,0.14)', color: '#5a8f7a' }}>{p.role || '其他'}</span>
+                <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, background: 'rgba(90,143,122,0.14)', color: '#5a8f7a' }}>{t('role.' + (p.role || '其他'))}</span>
                 <span style={{ fontSize: '11px', color: '#9a8570' }}>
-                  {new Date(p.created_at).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}
+                  {new Date(p.created_at).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', { month: 'numeric', day: 'numeric' })}
                 </span>
               </div>
             </div>
@@ -798,7 +809,7 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChan
             )}
             {/* 展开 + like 同一行 */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
-              <span style={{ fontSize: '12px', color: '#7d9b96', fontWeight: 600, visibility: p.note && (p.note.length > 60 || (p.note.match(/\n/g) || []).length >= 2) ? 'visible' : 'hidden' }}>[展开]</span>
+              <span style={{ fontSize: '12px', color: '#7d9b96', fontWeight: 600, visibility: p.note && (p.note.length > 60 || (p.note.match(/\n/g) || []).length >= 2) ? 'visible' : 'hidden' }}>{t('discover.expand')}</span>
               <motion.button
                 whileTap={{ scale: 0.8 }}
                 onClick={e => toggleLike(e, p.id, p.user_id)}
@@ -835,6 +846,7 @@ function ChallengeTab() {
 }
 
 function CenterFeed({ onRecruit, recruitRefreshKey, guest, onRequireLogin, isMobile, onPostChange }) {
+  const { t } = useLanguage();
   const teammates = (
     <TeammatesTab onRecruit={guest ? onRequireLogin : onRecruit} refreshKey={recruitRefreshKey} guest={guest} onRequireLogin={onRequireLogin} onPostChange={onPostChange} />
   );
@@ -842,13 +854,13 @@ function CenterFeed({ onRecruit, recruitRefreshKey, guest, onRequireLogin, isMob
     <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexShrink: 0 }}>
-        <p style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.04em' }}>招募大厅</p>
+        <p style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.04em' }}>{t('discover.recruit_hall')}</p>
         <motion.button
           whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
           onClick={guest ? onRequireLogin : onRecruit}
           style={{ padding: '9px 18px', background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
         >
-          + 发起招募
+          {t('discover.post_btn')}
         </motion.button>
       </div>
 
@@ -867,6 +879,7 @@ function CenterFeed({ onRecruit, recruitRefreshKey, guest, onRequireLogin, isMob
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Discover() {
+  const { lang } = useLanguage();
   const { user: authUser, loading: authLoading } = useAuth();
   const guest = isConfigured && !authLoading && !authUser;
   const [showModal, setShowModal] = useState(false);
@@ -918,7 +931,7 @@ export default function Discover() {
         {/* Left rail */}
         <aside style={{ paddingTop: '32px', paddingBottom: '32px', overflowY: 'hidden', ...railGuestStyle }} {...railGuestProps}>
           <MiniProfile />
-          <LeaderboardCard />
+          {lang === 'zh' && <LeaderboardCard />}
         </aside>
 
         {/* Center */}
