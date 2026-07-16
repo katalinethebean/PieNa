@@ -8,20 +8,31 @@ import { useLanguage } from '../contexts/LanguageContext';
 import ConfirmModal from '../components/ConfirmModal';
 import { useIsMobile } from '../lib/useIsMobile';
 
-const POSITIONS = [
-  '正方一辩', '正方二辩', '正方三辩', '正方四辩',
-  '反方一辩', '反方二辩', '反方三辩', '反方四辩',
+const POSITION_ZH_TO_KEY = {
+  '正方一辩': 'pos.prop1', '正方二辩': 'pos.prop2', '正方三辩': 'pos.prop3', '正方四辩': 'pos.prop4',
+  '反方一辩': 'pos.opp1',  '反方二辩': 'pos.opp2',  '反方三辩': 'pos.opp3',  '反方四辩': 'pos.opp4',
+};
+
+const POSITION_KEYS = [
+  { value: '正方一辩', key: 'pos.prop1' },
+  { value: '正方二辩', key: 'pos.prop2' },
+  { value: '正方三辩', key: 'pos.prop3' },
+  { value: '正方四辩', key: 'pos.prop4' },
+  { value: '反方一辩', key: 'pos.opp1' },
+  { value: '反方二辩', key: 'pos.opp2' },
+  { value: '反方三辩', key: 'pos.opp3' },
+  { value: '反方四辩', key: 'pos.opp4' },
 ];
 
-const SCORE_META = [
-  { key: 'fluency',        label: '流畅', full: '流畅性', feedbackKey: 'feedback_fluency' },
-  { key: 'originality',    label: '原创', full: '原创性', feedbackKey: 'feedback_originality' },
-  { key: 'flexibility',    label: '灵活', full: '灵活性', feedbackKey: 'feedback_flexibility' },
-  { key: 'targetedness',   label: '针对', full: '针对性', feedbackKey: 'feedback_targetedness' },
-  { key: 'logicality',     label: '逻辑', full: '逻辑性', feedbackKey: 'feedback_logicality' },
-  { key: 'effectiveness',  label: '有效', full: '有效性', feedbackKey: 'feedback_effectiveness' },
-  { key: 'clarity',        label: '清晰', full: '清晰度', feedbackKey: 'feedback_clarity' },
-  { key: 'appeal',         label: '吸引', full: '吸引力', feedbackKey: 'feedback_appeal' },
+const SCORE_KEYS = [
+  { key: 'fluency',       labelKey: 'score.fluency',       fullKey: 'score.fluency_full',       feedbackKey: 'feedback_fluency' },
+  { key: 'originality',   labelKey: 'score.originality',   fullKey: 'score.originality_full',   feedbackKey: 'feedback_originality' },
+  { key: 'flexibility',   labelKey: 'score.flexibility',   fullKey: 'score.flexibility_full',   feedbackKey: 'feedback_flexibility' },
+  { key: 'targetedness',  labelKey: 'score.targetedness',  fullKey: 'score.targetedness_full',  feedbackKey: 'feedback_targetedness' },
+  { key: 'logicality',    labelKey: 'score.logicality',    fullKey: 'score.logicality_full',    feedbackKey: 'feedback_logicality' },
+  { key: 'effectiveness', labelKey: 'score.effectiveness', fullKey: 'score.effectiveness_full', feedbackKey: 'feedback_effectiveness' },
+  { key: 'clarity',       labelKey: 'score.clarity',       fullKey: 'score.clarity_full',       feedbackKey: 'feedback_clarity' },
+  { key: 'appeal',        labelKey: 'score.appeal',        fullKey: 'score.appeal_full',        feedbackKey: 'feedback_appeal' },
 ];
 
 const scoreColor = s => s >= 8 ? '#5a8f7a' : s >= 7 ? '#7d9b96' : '#c07a3a';
@@ -95,19 +106,22 @@ function ScoreRow({ full, score, notes, index }) {
 }
 
 function ResultCard({ session, onDelete }) {
+  const { t, lang } = useLanguage();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const scores = session.scores || {};
+  const SCORE_META = SCORE_KEYS.map(m => ({ ...m, label: t(m.labelKey), full: t(m.fullKey) }));
   const radarData = SCORE_META.map(m => ({ subject: m.label, score: scores[m.key] ?? 0, fullMark: 10 }));
 
   const avg = session.overall_average ?? 0;
-  const date = new Date(session.created_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const displayLabel = session.justification?.note || session.position || '（无备注）';
+  const locale = lang === 'en' ? 'en-US' : 'zh-CN';
+  const date = new Date(session.created_at).toLocaleDateString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const displayLabel = session.justification?.note || session.position || '—';
 
   const handleDelete = async () => {
     setDeleting(true);
     const { error } = await supabase.from('review_sessions').delete().eq('id', session.id);
-    if (error) { alert('删除失败：' + error.message); setDeleting(false); return; }
+    if (error) { alert(error.message); setDeleting(false); return; }
     onDelete(session.id);
   };
 
@@ -115,9 +129,9 @@ function ResultCard({ session, onDelete }) {
     <>
       {confirmDelete && (
         <ConfirmModal
-          title="删除复盘记录"
-          message="确定要删除这条复盘记录吗？此操作无法撤销。"
-          confirmLabel="删除"
+          title={t('review.delete_title')}
+          message={t('review.delete_msg')}
+          confirmLabel={t('common.delete')}
           danger
           onCancel={() => setConfirmDelete(false)}
           onConfirm={handleDelete}
@@ -134,7 +148,7 @@ function ResultCard({ session, onDelete }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
         <div>
           <p style={{ fontSize: '13px', fontWeight: 700, color: '#2C3025', marginBottom: '2px' }}>{displayLabel}</p>
-          <p style={{ fontSize: '11px', color: '#9a8570' }}>{session.position} · {date}</p>
+          <p style={{ fontSize: '11px', color: '#9a8570' }}>{t(POSITION_ZH_TO_KEY[session.position]) || session.position} · {date}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
           <span style={{ fontSize: '24px', fontWeight: 800, color: scoreColor(avg), fontVariantNumeric: 'tabular-nums' }}>
@@ -165,6 +179,7 @@ function ResultCard({ session, onDelete }) {
 }
 
 function HistoryPanel({ open, onClose }) {
+  const { t } = useLanguage();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -204,7 +219,7 @@ function HistoryPanel({ open, onClose }) {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#2C3025', margin: 0 }}>复盘历史记录</h2>
+              <h2 style={{ fontSize: '17px', fontWeight: 700, color: '#2C3025', margin: 0 }}>{t('review.history_title')}</h2>
               <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a8570', padding: '4px' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -213,10 +228,10 @@ function HistoryPanel({ open, onClose }) {
             </div>
 
             {loading && (
-              <p style={{ fontSize: '13px', color: '#9a8570', textAlign: 'center', padding: '32px 0' }}>加载中…</p>
+              <p style={{ fontSize: '13px', color: '#9a8570', textAlign: 'center', padding: '32px 0' }}>{t('common.loading')}</p>
             )}
             {!loading && sessions.length === 0 && (
-              <p style={{ fontSize: '13px', color: '#9a8570', textAlign: 'center', padding: '32px 0' }}>暂无历史记录</p>
+              <p style={{ fontSize: '13px', color: '#9a8570', textAlign: 'center', padding: '32px 0' }}>{t('review.history_empty')}</p>
             )}
             <AnimatePresence>
               {sessions.map(s => (
@@ -246,17 +261,18 @@ export default function Review() {
 
   const { jobs, activeJobId, setActiveJobId, startJob, removeJob, updateJob } = useReviewJob();
   const { t } = useLanguage();
+  const SCORE_META = SCORE_KEYS.map(m => ({ ...m, label: t(m.labelKey), full: t(m.fullKey) }));
+  const POSITIONS = POSITION_KEYS.map(p => ({ value: p.value, label: t(p.key) }));
   const job = jobs.find(j => j.id === activeJobId) || null;
   const result = job?.status === 'done' ? job.result : null;
   const savedId = job?.savedId || null;
-  // 任务的元信息（辩位/辩题）——从任务里取，避免用户切页后表单状态丢失
   const jobPosition = job?.meta?.position || position;
   const jobMotion = job?.meta?.motion || debateMotion;
 
   const handleAnalyze = async () => {
-    if (!position) { setError('请选择辩手位置'); return; }
-    if (!debateMotion.trim()) { setError('请输入辩题'); return; }
-    if (!text.trim()) { setError('请输入发言内容'); return; }
+    if (!position) { setError(t('review.error_position')); return; }
+    if (!debateMotion.trim()) { setError(t('review.error_motion')); return; }
+    if (!text.trim()) { setError(t('review.error_speech')); return; }
     setError('');
     const { error: startError } = await startJob({ position, motion: debateMotion, text, context });
     if (startError) { setError(startError); return; }
@@ -307,7 +323,7 @@ export default function Review() {
     }).select('id').single();
 
     setSaving(false);
-    if (error) { alert('保存失败：' + error.message); return; }
+    if (error) { alert(error.message); return; }
     updateJob(job.id, { savedId: data.id });
   };
 
@@ -317,9 +333,7 @@ export default function Review() {
     updateJob(job.id, { savedId: null });
   };
 
-  const radarData = result
-    ? SCORE_META.map(m => ({ subject: m.label, score: result[m.key] ?? 0, fullMark: 10 }))
-    : [];
+  const radarData = result ? SCORE_META.map(m => ({ subject: m.label, score: result[m.key] ?? 0, fullMark: 10 })) : [];
 
   // ── 任务界面（结果 / 错误；运行中的进度由全局 AnalysisOverlay 显示）──
   if (job && job.kind === 'review' && job.status !== 'running') {
@@ -329,25 +343,25 @@ export default function Review() {
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(44,48,37,0.5)', backdropFilter: 'blur(4px)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
             style={{ width: '100%', maxWidth: '380px', background: '#F2EDE4', borderRadius: '16px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', margin: 0 }}>保存前请输入备注</h3>
-            <p style={{ fontSize: '13px', color: '#7d6b55', margin: 0 }}>备注将作为历史记录中的显示标题（可留空）</p>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', margin: 0 }}>{t('review.save_note_title')}</h3>
+            <p style={{ fontSize: '13px', color: '#7d6b55', margin: 0 }}>{t('review.save_note_desc')}</p>
             <input
               autoFocus
               value={noteDraft}
               onChange={e => setNoteDraft(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSave(noteDraft); if (e.key === 'Escape') setNotePrompt(false); }}
-              placeholder="如：2026港辩决赛 反方三辩"
+              placeholder={t('review.save_note_placeholder')}
               maxLength={60}
               style={{ padding: '10px 14px', border: '1px solid rgba(200,184,154,0.6)', borderRadius: '8px', fontSize: '14px', color: '#2C3025', background: 'rgba(255,255,255,0.7)', outline: 'none', fontFamily: 'inherit' }}
             />
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => handleSave(noteDraft)}
                 style={{ flex: 1, padding: '10px', background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                保存
+                {t('common.save')}
               </button>
               <button onClick={() => setNotePrompt(false)}
                 style={{ padding: '10px 16px', background: 'transparent', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '10px', fontSize: '13px', color: '#9a8570', cursor: 'pointer', fontFamily: 'inherit' }}>
-                取消
+                {t('common.cancel')}
               </button>
             </div>
           </motion.div>
@@ -366,7 +380,7 @@ export default function Review() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
             </svg>
-            {result ? '新的分析' : '取消'}
+            {result ? t('review.new') : t('common.cancel')}
           </button>
           <button
             onClick={handleMinimize}
@@ -376,7 +390,7 @@ export default function Review() {
               <polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>
               <line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/>
             </svg>
-            收起
+            {t('review.minimize')}
           </button>
         </motion.div>
 
@@ -384,10 +398,10 @@ export default function Review() {
         {job.status === 'error' && (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
             className="glass-card" style={{ padding: '40px 32px', textAlign: 'center' }}>
-            <p style={{ fontSize: '15px', fontWeight: 700, color: '#a03030', marginBottom: '8px' }}>分析失败</p>
+            <p style={{ fontSize: '15px', fontWeight: 700, color: '#a03030', marginBottom: '8px' }}>{t('review.failed')}</p>
             <p style={{ fontSize: '13px', color: '#6b5c45', marginBottom: '24px' }}>{job.error}</p>
             <button onClick={() => removeJob(job.id)} style={{ ...btnBase, display: 'inline-flex', background: 'rgba(90,143,122,0.1)', color: '#5a8f7a', borderColor: 'rgba(90,143,122,0.35)' }}>
-              返回重试
+              {t('overlay.retry')}
             </button>
           </motion.div>
         )}
@@ -404,7 +418,7 @@ export default function Review() {
                 background: 'rgba(192,122,58,0.1)', border: '1px solid rgba(192,122,58,0.25)',
                 borderRadius: '8px', fontSize: '12px', color: '#c07a3a',
               }}>
-                ⚠️ 模拟模式：OpenRouter API Key 未配置，以下为示例数据
+                ⚠️ Mock mode: OpenRouter API key not set — showing example data
               </div>
             )}
 
@@ -414,13 +428,13 @@ export default function Review() {
                 background: 'rgba(90,143,122,0.1)', border: '1px solid rgba(90,143,122,0.25)',
                 borderRadius: '8px', fontSize: '12px', color: '#5a8f7a',
               }}>
-                ✓ 已保存到历史记录
+                {t('review.saved_banner')}
               </div>
             )}
 
             {/* Overall score */}
             <div className="glass-card" style={{ padding: '28px 24px', marginBottom: '16px', textAlign: 'center' }}>
-              <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '8px' }}>综合评分</p>
+              <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '8px' }}>{t('review.overall')}</p>
               <motion.div
                 initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.1 }}
@@ -428,7 +442,7 @@ export default function Review() {
               >
                 {(result.overall ?? 0).toFixed(2)}
               </motion.div>
-              <p style={{ fontSize: '12px', color: '#9a8570', margin: '4px 0 0' }}>{jobPosition}</p>
+              <p style={{ fontSize: '12px', color: '#9a8570', margin: '4px 0 0' }}>{t(POSITION_ZH_TO_KEY[jobPosition]) || jobPosition}</p>
             </div>
 
             {/* Radar + scores */}
@@ -458,7 +472,7 @@ export default function Review() {
             {/* Summary feedback */}
             {result.feedback_summary && (
               <div className="glass-card" style={{ padding: '20px', marginBottom: '16px' }}>
-                <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '10px' }}>总体评价</p>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '10px' }}>{t('review.overall_feedback')}</p>
                 <p style={{ fontSize: '13px', color: '#2C3025', lineHeight: 1.75, margin: 0 }}>{result.feedback_summary}</p>
               </div>
             )}
@@ -468,13 +482,13 @@ export default function Review() {
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 {result.highlight_moment && (
                   <div className="glass-card" style={{ padding: '20px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#5a8f7a', letterSpacing: '0.1em', marginBottom: '10px' }}>✦ 最亮眼时刻</p>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#5a8f7a', letterSpacing: '0.1em', marginBottom: '10px' }}>{t('review.highlight')}</p>
                     <p style={{ fontSize: '13px', color: '#2C3025', lineHeight: 1.7, margin: 0 }}>{result.highlight_moment}</p>
                   </div>
                 )}
                 {result.biggest_improvement && (
                   <div className="glass-card" style={{ padding: '20px' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#c07a3a', letterSpacing: '0.1em', marginBottom: '10px' }}>→ 最需改进</p>
+                    <p style={{ fontSize: '11px', fontWeight: 700, color: '#c07a3a', letterSpacing: '0.1em', marginBottom: '10px' }}>{t('review.improvement')}</p>
                     <p style={{ fontSize: '13px', color: '#2C3025', lineHeight: 1.7, margin: 0 }}>{result.biggest_improvement}</p>
                   </div>
                 )}
@@ -484,7 +498,7 @@ export default function Review() {
             {result.extracted_preview && (
               <details style={{ marginBottom: '16px' }}>
                 <summary style={{ fontSize: '12px', color: '#9a8570', cursor: 'pointer', padding: '8px 0' }}>
-                  查看提取的发言片段预览
+                  {t('review.preview_label')}
                 </summary>
                 <div className="glass-card" style={{ padding: '16px', marginTop: '8px' }}>
                   <p style={{ fontSize: '12px', color: '#6b5c45', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
@@ -503,7 +517,7 @@ export default function Review() {
                     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
                     <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
                   </svg>
-                  删除记录
+                  {t('report.delete')}
                 </motion.button>
               ) : (
                 <motion.button onClick={handleSaveClick} disabled={saving} whileHover={!saving ? { opacity: 0.8 } : {}} whileTap={!saving ? { scale: 0.97 } : {}}
@@ -512,7 +526,7 @@ export default function Review() {
                     <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
                     <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
                   </svg>
-                  {saving ? '保存中…' : '保存'}
+                  {saving ? t('profile.saving') : t('common.save')}
                 </motion.button>
               )}
               <motion.button onClick={() => window.print()} whileHover={{ opacity: 0.8 }} whileTap={{ scale: 0.97 }}
@@ -521,7 +535,7 @@ export default function Review() {
                   <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
                   <rect x="6" y="14" width="12" height="8"/>
                 </svg>
-                导出 PDF
+                {t('review.export_pdf')}
               </motion.button>
             </div>
           </motion.div>
@@ -549,7 +563,7 @@ export default function Review() {
       >
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#2C3025', marginBottom: '4px' }}>{t('review.title')}</h1>
-          <p style={{ fontSize: '12px', color: '#9a8570', margin: 0 }}>所有分析与评分仅供参考。</p>
+          <p style={{ fontSize: '12px', color: '#9a8570', margin: 0 }}>{t('review.disclaimer')}</p>
         </div>
         <motion.button
           onClick={() => setShowHistory(true)}
@@ -569,33 +583,31 @@ export default function Review() {
       {/* Form */}
       <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
         <div style={{ marginBottom: '20px' }}>
-          <label style={labelStyle}>辩手位置 *</label>
+          <label style={labelStyle}>{t('review.position_label')} *</label>
           <select value={position} onChange={e => setPosition(e.target.value)}
             style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}>
-            <option value="">请选择…</option>
-            {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+            <option value="">{t('review.position_default')}</option>
+            {POSITIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
         </div>
 
         <div style={{ marginBottom: '20px' }}>
-          <label style={labelStyle}>辩题 *</label>
+          <label style={labelStyle}>{t('review.motion_label')} *</label>
           <input type="text" value={debateMotion} onChange={e => setDebateMotion(e.target.value)}
             placeholder="" style={inputStyle} />
         </div>
 
         <div style={{ marginBottom: '20px' }}>
-          <label style={labelStyle}>
-            发言内容 *
-          </label>
+          <label style={labelStyle}>{t('review.speech_label')} *</label>
           <textarea value={text} onChange={e => setText(e.target.value)}
-            placeholder="粘贴文字转录或稿件原文"
+            placeholder={t('review.speech_placeholder')}
             rows={10} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }} />
         </div>
 
         <div style={{ marginBottom: '24px' }}>
-          <label style={labelStyle}>补充说明 <span style={{ fontWeight: 400, color: '#9a8570' }}>（可选）</span></label>
+          <label style={labelStyle}>{t('review.context_label')} <span style={{ fontWeight: 400, color: '#9a8570' }}>({t('common.optional') ?? 'optional'})</span></label>
           <textarea value={context} onChange={e => setContext(e.target.value)}
-            placeholder="详细提示词/问题"
+            placeholder={t('review.context_placeholder')}
             rows={3} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }} />
         </div>
 

@@ -289,9 +289,7 @@ export default function Navbar() {
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginRight: '40px', flexShrink: 0 }}>
         <Link to="/discover" style={{ textDecoration: 'none' }}>
-          <span style={{ fontSize: '16px', fontWeight: 700, color: '#E8E4DC', letterSpacing: '0.05em', fontFamily: 'inherit' }}>
-            撇捺
-          </span>
+          <img src="/favicon.png" alt="撇捺" style={{ width: '28px', height: '28px', display: 'block' }} />
         </Link>
         {!guest && <OnboardingButton />}
       </div>

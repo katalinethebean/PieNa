@@ -204,7 +204,7 @@ export default {
   'report.no_analysis': 'No AI analysis yet',
 
   // common
-  'common.loading': 'Loading…',
+  'common.loading': 'Loading…', 'common.optional': 'optional',
   'common.error': 'Something went wrong, please try again',
   'common.cancel': 'Cancel',
   'common.confirm': 'Confirm',
@@ -281,4 +281,71 @@ export default {
   'onboard.saving': 'Saving…',
   'onboard.skip_to_profile': 'Skip intro, go to profile',
   'onboard.name_required': 'Please enter your display name',
+
+  // leaderboard tabs & card columns
+  'lb.tab1': 'Pos. 1', 'lb.tab2': 'Pos. 2', 'lb.tab3': 'Pos. 3', 'lb.tab4': 'Pos. 4', 'lb.tab_overall': 'Overall',
+  'lb.col_pos': 'Position', 'lb.col_matches': 'Matches', 'lb.col_mvp': 'MVP', 'lb.col_points': 'Points', 'lb.col_rank': 'Global Rank',
+
+  // review form / result
+  'review.position_label': 'Position',
+  'review.position_default': 'Select…',
+  'review.motion_label': 'Motion',
+  'review.speech_label': 'Speech',
+  'review.speech_placeholder': 'Paste your speech transcript or text',
+  'review.context_label': 'Additional context',
+  'review.context_placeholder': 'Detailed prompt or notes',
+  'review.disclaimer': 'All scores are for reference only.',
+  'review.error_position': 'Please select a position',
+  'review.error_motion': 'Please enter the motion',
+  'review.error_speech': 'Please enter your speech',
+  'review.new': 'New Analysis',
+  'review.minimize': 'Minimize',
+  'review.failed': 'Analysis Failed',
+  'review.overall': 'Overall Score',
+  'review.overall_feedback': 'Overall Feedback',
+  'review.highlight': '✦ Best Moment',
+  'review.improvement': '→ Biggest Improvement',
+  'review.preview_label': 'See extracted speech preview',
+  'review.export_pdf': 'Export PDF',
+  'review.saved_banner': '✓ Saved to history',
+  'review.save_note_title': 'Add a note before saving',
+  'review.save_note_desc': 'This will be the display title in history (optional)',
+  'review.save_note_placeholder': 'e.g. 2026 HK Finals, Opp. 3rd Speaker',
+  'review.history_title': 'Review History',
+  'review.history_empty': 'No history yet',
+  'review.delete_title': 'Delete Review Record',
+  'review.delete_msg': 'Are you sure? This cannot be undone.',
+  'review.upload_action': 'Analyze Match',
+  'review.record_action': 'Record Match',
+
+  // score dimensions
+  'score.fluency': 'Fluency', 'score.fluency_full': 'Fluency',
+  'score.originality': 'Originality', 'score.originality_full': 'Originality',
+  'score.flexibility': 'Flexibility', 'score.flexibility_full': 'Flexibility',
+  'score.targetedness': 'Relevance', 'score.targetedness_full': 'Relevance',
+  'score.logicality': 'Logic', 'score.logicality_full': 'Logic',
+  'score.effectiveness': 'Effectiveness', 'score.effectiveness_full': 'Effectiveness',
+  'score.clarity': 'Clarity', 'score.clarity_full': 'Clarity',
+  'score.appeal': 'Appeal', 'score.appeal_full': 'Appeal',
+
+  // debate positions (review page)
+  'pos.prop1': 'Prop. 1st', 'pos.prop2': 'Prop. 2nd', 'pos.prop3': 'Prop. 3rd', 'pos.prop4': 'Prop. 4th',
+  'pos.opp1': 'Opp. 1st', 'pos.opp2': 'Opp. 2nd', 'pos.opp3': 'Opp. 3rd', 'pos.opp4': 'Opp. 4th',
+
+  // network node stats
+  'network.avg_score': 'Avg', 'network.win_rate_label': 'Win Rate', 'network.sessions_label': 'Matches',
+
+  // profile
+  'profile.region_placeholder': 'Select…',
+
+  // regions
+  'region.北京': 'Beijing', 'region.天津': 'Tianjin', 'region.上海': 'Shanghai', 'region.重庆': 'Chongqing',
+  'region.河北': 'Hebei', 'region.山西': 'Shanxi', 'region.辽宁': 'Liaoning', 'region.吉林': 'Jilin',
+  'region.黑龙江': 'Heilongjiang', 'region.江苏': 'Jiangsu', 'region.浙江': 'Zhejiang', 'region.安徽': 'Anhui',
+  'region.福建': 'Fujian', 'region.江西': 'Jiangxi', 'region.山东': 'Shandong', 'region.河南': 'Henan',
+  'region.湖北': 'Hubei', 'region.湖南': 'Hunan', 'region.广东': 'Guangdong', 'region.海南': 'Hainan',
+  'region.四川': 'Sichuan', 'region.贵州': 'Guizhou', 'region.云南': 'Yunnan', 'region.陕西': 'Shaanxi',
+  'region.甘肃': 'Gansu', 'region.青海': 'Qinghai', 'region.内蒙古': 'Inner Mongolia', 'region.广西': 'Guangxi',
+  'region.西藏': 'Tibet', 'region.宁夏': 'Ningxia', 'region.新疆': 'Xinjiang', 'region.香港': 'Hong Kong',
+  'region.澳门': 'Macau', 'region.台湾': 'Taiwan', 'region.海外': 'Overseas',
 };

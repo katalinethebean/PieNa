@@ -9,7 +9,7 @@ import { supabase, isConfigured } from '../lib/supabase';
 import LoginPromptModal from '../components/LoginPromptModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DebaterModal from '../components/DebaterModal';
-import { useIsMobile } from '../lib/useIsMobile';
+import { useIsMobile, MOBILE_FULL_HEIGHT } from '../lib/useIsMobile';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const spring = { type: 'spring', stiffness: 300, damping: 22 };
@@ -39,7 +39,7 @@ function MiniProfile() {
         <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
           {[
             { v: displayAvg, l: t('profile.avg_score') },
-            { v: sessions?.length ?? 0, l: '场次' },
+            { v: sessions?.length ?? 0, l: t('lb.matches') },
             { v: friends.length, l: t('profile.friends') },
             { v: `${winRate}%`, l: t('profile.win_rate') },
           ].map(({ v, l }) => (
@@ -60,13 +60,7 @@ function MiniProfile() {
   );
 }
 
-const RANK_BOARDS = [
-  { key: '1', label: '一辩' },
-  { key: '2', label: '二辩' },
-  { key: '3', label: '三辩' },
-  { key: '4', label: '四辩' },
-  { key: 'overall', label: '全能' },
-];
+// RANK_BOARDS is defined inside LeaderboardCard to access t()
 
 function formatRank(rank) {
   if (rank == null) return '-';
@@ -77,6 +71,13 @@ const RANK_COLUMNS = '0.9fr 0.65fr 0.65fr 0.75fr 0.95fr';
 
 function LeaderboardCard() {
   const { t } = useLanguage();
+  const RANK_BOARDS = [
+    { key: '1', label: t('lb.pos1') },
+    { key: '2', label: t('lb.pos2') },
+    { key: '3', label: t('lb.pos3') },
+    { key: '4', label: t('lb.pos4') },
+    { key: 'overall', label: t('lb.overall') },
+  ];
   const [self, setSelf] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -95,7 +96,7 @@ function LeaderboardCard() {
       ) : (
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: RANK_COLUMNS, gap: '2px', paddingBottom: '6px', marginBottom: '2px', borderBottom: '1px solid rgba(200,184,154,0.4)' }}>
-            {['辩位', '场次', '佳辩', '积分', '全服排名'].map((c, i) => (
+            {[t('lb.col_pos'), t('lb.col_matches'), t('lb.col_mvp'), t('lb.col_points'), t('lb.col_rank')].map((c, i) => (
               <span key={c} style={{ fontSize: '10px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.01em', textAlign: i === 0 ? 'left' : 'center' }}>{c}</span>
             ))}
           </div>
@@ -649,8 +650,10 @@ function RecruitPostModal({ post, onClose, guest, onRequireLogin }) {
 
 const FEED_FILTERS = ['全部', '我的', '好友', '找队友', '找评委', '找教练', '其他'];
 
-function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChange }) {
+function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChange, isMobile }) {
   const { lang, t } = useLanguage();
+  // 「我的」只在手机端展示——桌面端右栏本来就有「我的招募」卡片，不需要重复入口
+  const feedFilters = isMobile ? FEED_FILTERS : FEED_FILTERS.filter(f => f !== '我的');
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openPost, setOpenPost] = useState(null);
@@ -718,7 +721,7 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChan
   const filterBar = (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap', flex: 1, minWidth: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        {FEED_FILTERS.map(f => {
+        {feedFilters.map(f => {
           const active = f === '全部' ? filters.length === 0 : filters.includes(f);
           return (
             <button key={f} onClick={() => toggleFilter(f)}
@@ -746,36 +749,25 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChan
     </div>
   );
 
-  if (filters.includes('我的')) return (
-    <div>
-      {filterBar}
-      <MyRecruits refreshKey={refreshKey} onPostChange={onPostChange} />
-    </div>
+  // 筛选栏固定在顶部，下面的内容区自己滚动（手机和桌面同一套结构）
+  let content;
+  if (filters.includes('我的')) content = (
+    <MyRecruits refreshKey={refreshKey} onPostChange={onPostChange} />
   );
-
-  if (loading) return (
-    <div>
-      {filterBar}
-      <p style={{ textAlign: 'center', padding: '48px 0', fontSize: '13px', color: '#9a8570' }}>{t('discover.loading')}</p>
-    </div>
+  else if (loading) content = (
+    <p style={{ textAlign: 'center', padding: '48px 0', fontSize: '13px', color: '#9a8570' }}>{t('discover.loading')}</p>
   );
-
-  if (posts.length === 0) return (
-    <div>
-      {filterBar}
-      <EmptyState
-        icon="🤝"
-        title={filters.length === 0 ? t('discover.no_posts') : t('discover.no_match')}
-        sub={filters.length === 0 ? t('discover.be_first') : t('discover.try_other')}
-        action={t('recruit.title')}
-        onAction={onRecruit}
-      />
-    </div>
+  else if (posts.length === 0) content = (
+    <EmptyState
+      icon="🤝"
+      title={filters.length === 0 ? t('discover.no_posts') : t('discover.no_match')}
+      sub={filters.length === 0 ? t('discover.be_first') : t('discover.try_other')}
+      action={t('recruit.title')}
+      onAction={onRecruit}
+    />
   );
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {filterBar}
+  else content = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '16px' }}>
       {posts.map(p => {
         const likeCount = likes.filter(l => l.post_id === p.id).length;
         const hasLiked = likes.some(l => l.post_id === p.id && l.user_id === selfId);
@@ -826,6 +818,15 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChan
           </motion.div>
         );
       })}
+    </div>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      <div style={{ flexShrink: 0 }}>{filterBar}</div>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+        {content}
+      </div>
       <AnimatePresence>
         {openPost && <RecruitPostModal post={openPost} onClose={() => setOpenPost(null)} guest={guest} onRequireLogin={onRequireLogin} />}
       </AnimatePresence>
@@ -847,12 +848,9 @@ function ChallengeTab() {
 
 function CenterFeed({ onRecruit, recruitRefreshKey, guest, onRequireLogin, isMobile, onPostChange }) {
   const { t } = useLanguage();
-  const teammates = (
-    <TeammatesTab onRecruit={guest ? onRequireLogin : onRecruit} refreshKey={recruitRefreshKey} guest={guest} onRequireLogin={onRequireLogin} onPostChange={onPostChange} />
-  );
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100%' }}>
-      {/* Header */}
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      {/* Header — 标题和发起招募按钮固定不滚动 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexShrink: 0 }}>
         <p style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.04em' }}>{t('discover.recruit_hall')}</p>
         <motion.button
@@ -864,14 +862,10 @@ function CenterFeed({ onRecruit, recruitRefreshKey, guest, onRequireLogin, isMob
         </motion.button>
       </div>
 
-      {/* Content — 手机端随页面滚动，桌面端内部滚动 */}
-      {isMobile ? teammates : (
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <div style={{ height: '100%', overflowY: 'auto' }}>
-            {teammates}
-          </div>
-        </div>
-      )}
+      {/* 筛选栏也固定，只有里面的卡片列表滚动（TeammatesTab 内部处理） */}
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <TeammatesTab onRecruit={guest ? onRequireLogin : onRecruit} refreshKey={recruitRefreshKey} guest={guest} onRequireLogin={onRequireLogin} onPostChange={onPostChange} isMobile={isMobile} />
+      </div>
     </div>
   );
 }
@@ -905,7 +899,7 @@ export default function Discover() {
   // 我的招募在招募大厅筛选栏里的「我的」tab（见 TeammatesTab）
   if (isMobile) {
     return (
-      <div style={{ padding: '12px 16px 0' }}>
+      <div style={{ height: MOBILE_FULL_HEIGHT, padding: '12px 16px 0', boxSizing: 'border-box', overflow: 'hidden' }}>
         {feed}
         <AnimatePresence>
           {showRecruit && <RecruitModal onClose={() => setShowRecruit(false)} onPosted={() => { setShowRecruit(false); setRecruitRefreshKey(k => k + 1); }} />}

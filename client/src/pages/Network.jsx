@@ -361,15 +361,15 @@ export default function Network() {
                     </div>
                     {!panelHidden && <p style={{ fontSize: '11px', color: 'rgba(232,228,220,0.38)', marginBottom: '5px' }}>{panelNodeData.school} · {panelNodeData.region}</p>}
                     <div style={{ display: 'flex', gap: '14px' }}>
-                      {!panelHidden && <span style={{ fontSize: '11px', color: '#7d9b96', fontWeight: 600 }}>{panelNodeData.avg_score.toFixed(1)} <span style={{ color: 'rgba(232,228,220,0.28)', fontWeight: 400 }}>均分</span></span>}
+                      {!panelHidden && <span style={{ fontSize: '11px', color: '#7d9b96', fontWeight: 600 }}>{panelNodeData.avg_score.toFixed(1)} <span style={{ color: 'rgba(232,228,220,0.28)', fontWeight: 400 }}>{t('network.avg_score')}</span></span>}
                       {!panelHidden && !panelNodeData.self && panelNodeData.total_sessions != null && (
                         <span style={{ fontSize: '11px', color: 'rgba(232,228,220,0.35)' }}>
-                          {panelNodeData.total_sessions} <span style={{ color: 'rgba(232,228,220,0.22)' }}>场次</span>
+                          {panelNodeData.total_sessions} <span style={{ color: 'rgba(232,228,220,0.22)' }}>{t('network.sessions_label')}</span>
                         </span>
                       )}
                       {!panelHidden && !panelNodeData.self && panelNodeData.win_rate != null && (
                         <span style={{ fontSize: '11px', color: 'rgba(232,228,220,0.35)' }}>
-                          {Math.round(panelNodeData.win_rate * 100)}% <span style={{ color: 'rgba(232,228,220,0.22)' }}>胜率</span>
+                          {Math.round(panelNodeData.win_rate * 100)}% <span style={{ color: 'rgba(232,228,220,0.22)' }}>{t('network.win_rate_label')}</span>
                         </span>
                       )}
                       <span style={{ fontSize: '11px', color: 'rgba(232,228,220,0.35)' }}>{nodeConnCount[panelNodeData.id] ?? 0} 个连结</span>

@@ -630,9 +630,9 @@ export default function Profile({ self }) {
                       <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>{t('profile.region')}</label>
                       <select value={draftRegion} onChange={e => setDraftRegion(e.target.value)}
                         style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}>
-                        <option value="">请选择…</option>
+                        <option value="">{t('profile.region_placeholder')}</option>
                         {['北京','天津','上海','重庆','河北','山西','辽宁','吉林','黑龙江','江苏','浙江','安徽','福建','江西','山东','河南','湖北','湖南','广东','海南','四川','贵州','云南','陕西','甘肃','青海','内蒙古','广西','西藏','宁夏','新疆','香港','澳门','台湾','海外'].map(r => (
-                          <option key={r} value={r}>{r}</option>
+                          <option key={r} value={r}>{t('region.' + r)}</option>
                         ))}
                       </select>
                     </div>
@@ -730,7 +730,7 @@ export default function Profile({ self }) {
                         {profile.region && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9a8570" strokeWidth="2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            <span style={{ fontSize: '12px', color: '#7d6b55', fontWeight: 500 }}>{profile.region}</span>
+                            <span style={{ fontSize: '12px', color: '#7d6b55', fontWeight: 500 }}>{t('region.' + profile.region) || profile.region}</span>
                           </div>
                         )}
                         {(isSelf || isFriendOfProfile) && profile.wechat && (
@@ -791,7 +791,7 @@ export default function Profile({ self }) {
                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(44,48,37,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9a8570" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
                   </div>
-                  <span style={{ fontSize: '12px', color: '#6b5c45', fontWeight: 600 }}>分析比赛</span>
+                  <span style={{ fontSize: '12px', color: '#6b5c45', fontWeight: 600 }}>{t('review.upload_action')}</span>
                 </motion.div>
               </Link>
               <Link to="/record" style={{ textDecoration: 'none', flex: 1 }}>
@@ -800,7 +800,7 @@ export default function Profile({ self }) {
                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(44,48,37,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9a8570" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </div>
-                  <span style={{ fontSize: '12px', color: '#6b5c45', fontWeight: 600 }}>记录比赛</span>
+                  <span style={{ fontSize: '12px', color: '#6b5c45', fontWeight: 600 }}>{t('review.record_action')}</span>
                 </motion.div>
               </Link>
             </div>

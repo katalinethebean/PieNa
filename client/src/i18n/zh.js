@@ -204,7 +204,7 @@ export default {
   'report.no_analysis': '暂无 AI 分析',
 
   // common
-  'common.loading': '加载中…',
+  'common.loading': '加载中…', 'common.optional': '可选',
   'common.error': '出错了，请重试',
   'common.cancel': '取消',
   'common.confirm': '确认',
@@ -281,4 +281,71 @@ export default {
   'onboard.saving': '保存中…',
   'onboard.skip_to_profile': '跳过介绍，直接完善档案',
   'onboard.name_required': '请输入你的昵称',
+
+  // leaderboard tabs & card columns
+  'lb.tab1': '一辩榜', 'lb.tab2': '二辩榜', 'lb.tab3': '三辩榜', 'lb.tab4': '四辩榜', 'lb.tab_overall': '全能榜',
+  'lb.col_pos': '辩位', 'lb.col_matches': '场次', 'lb.col_mvp': '佳辩', 'lb.col_points': '积分', 'lb.col_rank': '全服排名',
+
+  // review form / result
+  'review.position_label': '辩手位置',
+  'review.position_default': '请选择…',
+  'review.motion_label': '辩题',
+  'review.speech_label': '发言内容',
+  'review.speech_placeholder': '粘贴文字转录或稿件原文',
+  'review.context_label': '补充说明',
+  'review.context_placeholder': '详细提示词/问题',
+  'review.disclaimer': '所有分析与评分仅供参考。',
+  'review.error_position': '请选择辩手位置',
+  'review.error_motion': '请输入辩题',
+  'review.error_speech': '请输入发言内容',
+  'review.new': '新的分析',
+  'review.minimize': '收起',
+  'review.failed': '分析失败',
+  'review.overall': '综合评分',
+  'review.overall_feedback': '总体评价',
+  'review.highlight': '✦ 最亮眼时刻',
+  'review.improvement': '→ 最需改进',
+  'review.preview_label': '查看提取的发言片段预览',
+  'review.export_pdf': '导出 PDF',
+  'review.saved_banner': '✓ 已保存到历史记录',
+  'review.save_note_title': '保存前请输入备注',
+  'review.save_note_desc': '备注将作为历史记录中的显示标题（可留空）',
+  'review.save_note_placeholder': '如：2026港辩决赛 反方三辩',
+  'review.history_title': '复盘历史记录',
+  'review.history_empty': '暂无历史记录',
+  'review.delete_title': '删除复盘记录',
+  'review.delete_msg': '确定要删除这条复盘记录吗？此操作无法撤销。',
+  'review.upload_action': '分析比赛',
+  'review.record_action': '记录比赛',
+
+  // score dimensions
+  'score.fluency': '流畅', 'score.fluency_full': '流畅性',
+  'score.originality': '原创', 'score.originality_full': '原创性',
+  'score.flexibility': '灵活', 'score.flexibility_full': '灵活性',
+  'score.targetedness': '针对', 'score.targetedness_full': '针对性',
+  'score.logicality': '逻辑', 'score.logicality_full': '逻辑性',
+  'score.effectiveness': '有效', 'score.effectiveness_full': '有效性',
+  'score.clarity': '清晰', 'score.clarity_full': '清晰度',
+  'score.appeal': '吸引', 'score.appeal_full': '吸引力',
+
+  // debate positions (review page)
+  'pos.prop1': '正方一辩', 'pos.prop2': '正方二辩', 'pos.prop3': '正方三辩', 'pos.prop4': '正方四辩',
+  'pos.opp1': '反方一辩', 'pos.opp2': '反方二辩', 'pos.opp3': '反方三辩', 'pos.opp4': '反方四辩',
+
+  // network node stats
+  'network.avg_score': '均分', 'network.win_rate_label': '胜率', 'network.sessions_label': '场次',
+
+  // profile
+  'profile.region_placeholder': '请选择…',
+
+  // regions
+  'region.北京': '北京', 'region.天津': '天津', 'region.上海': '上海', 'region.重庆': '重庆',
+  'region.河北': '河北', 'region.山西': '山西', 'region.辽宁': '辽宁', 'region.吉林': '吉林',
+  'region.黑龙江': '黑龙江', 'region.江苏': '江苏', 'region.浙江': '浙江', 'region.安徽': '安徽',
+  'region.福建': '福建', 'region.江西': '江西', 'region.山东': '山东', 'region.河南': '河南',
+  'region.湖北': '湖北', 'region.湖南': '湖南', 'region.广东': '广东', 'region.海南': '海南',
+  'region.四川': '四川', 'region.贵州': '贵州', 'region.云南': '云南', 'region.陕西': '陕西',
+  'region.甘肃': '甘肃', 'region.青海': '青海', 'region.内蒙古': '内蒙古', 'region.广西': '广西',
+  'region.西藏': '西藏', 'region.宁夏': '宁夏', 'region.新疆': '新疆', 'region.香港': '香港',
+  'region.澳门': '澳门', 'region.台湾': '台湾', 'region.海外': '海外',
 };

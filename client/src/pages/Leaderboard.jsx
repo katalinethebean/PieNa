@@ -60,11 +60,11 @@ function Column({ label, rows, self, isLast, t }) {
 export default function Leaderboard() {
   const { t } = useLanguage();
   const BOARDS = [
-    { key: '1', label: `${t('lb.pos1')}榜` },
-    { key: '2', label: `${t('lb.pos2')}榜` },
-    { key: '3', label: `${t('lb.pos3')}榜` },
-    { key: '4', label: `${t('lb.pos4')}榜` },
-    { key: 'overall', label: `${t('lb.overall')}榜` },
+    { key: '1', label: t('lb.tab1') },
+    { key: '2', label: t('lb.tab2') },
+    { key: '3', label: t('lb.tab3') },
+    { key: '4', label: t('lb.tab4') },
+    { key: 'overall', label: t('lb.tab_overall') },
   ];
   const [boards, setBoards] = useState(null);
   const [loading, setLoading] = useState(true);
