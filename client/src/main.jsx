@@ -8,11 +8,13 @@ import { UserProvider } from './contexts/UserContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { MatchInviteProvider } from './contexts/MatchInviteContext.jsx'
 import { ChatProvider } from './contexts/ChatContext.jsx'
+import { LanguageProvider } from './contexts/LanguageContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
+        <LanguageProvider>
         <UserProvider>
           <FriendProvider>
             <ChatProvider>
@@ -22,6 +24,7 @@ createRoot(document.getElementById('root')).render(
             </ChatProvider>
           </FriendProvider>
         </UserProvider>
+        </LanguageProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

@@ -12,6 +12,7 @@ import Chat from './pages/Chat';
 import Review from './pages/Review';
 import Login from './pages/Login';
 import { useAuth } from './contexts/AuthContext';
+import { useLanguage } from './contexts/LanguageContext';
 import { ReviewJobProvider } from './contexts/ReviewJobContext';
 import ReviewJobWidget from './components/ReviewJobWidget';
 import AnalysisOverlay from './components/AnalysisOverlay';
@@ -53,6 +54,12 @@ function PublicOnlyRoute({ children }) {
   return children;
 }
 
+function LeaderboardRoute() {
+  const { lang } = useLanguage();
+  if (lang === 'en') return <Navigate to="/discover" replace />;
+  return <PrivateRoute><Layout><Leaderboard /></Layout></PrivateRoute>;
+}
+
 export default function App() {
   useFixSafeAreaOnLoad();
   return (
@@ -65,7 +72,7 @@ export default function App() {
       {/* 访客可浏览招募大厅；页面内部按登录态降级 */}
       <Route path="/discover" element={<Layout><Discover /></Layout>} />
       <Route path="/network" element={<PrivateRoute><Layout><Network /></Layout></PrivateRoute>} />
-      <Route path="/leaderboard" element={<PrivateRoute><Layout><Leaderboard /></Layout></PrivateRoute>} />
+      <Route path="/leaderboard" element={<LeaderboardRoute />} />
       <Route path="/chat" element={<PrivateRoute><Layout><Chat /></Layout></PrivateRoute>} />
       <Route path="/chat/:id" element={<PrivateRoute><Layout><Chat /></Layout></PrivateRoute>} />
       <Route path="/me" element={<PrivateRoute><Layout><Profile self /></Layout></PrivateRoute>} />
