@@ -9,6 +9,7 @@ import { OPEN_ONBOARDING_EVENT } from './OnboardingModal';
 import { isConfigured } from '../lib/supabase';
 import { useUser } from '../contexts/UserContext';
 import { useChat } from '../contexts/ChatContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useIsMobile, MOBILE_TOP_H_TOTAL, MOBILE_BOTTOM_H } from '../lib/useIsMobile';
 
 const homeIcon = (
@@ -47,10 +48,10 @@ const findFriendsIcon = (
 );
 
 // 桌面顶栏 tab（发现 / 复盘 / 聊天）
-const NAV = [
-  { to: '/discover', label: '发现', icon: homeIcon },
-  { to: '/review', label: '复盘', icon: reviewIcon },
-  { to: '/chat', label: '聊天', icon: chatIcon },
+const NAV_DEFS = [
+  { to: '/discover', labelKey: 'nav.discover', icon: homeIcon },
+  { to: '/review', labelKey: 'nav.review', icon: reviewIcon },
+  { to: '/chat', labelKey: 'nav.chat', icon: chatIcon },
 ];
 
 const spring = { type: 'spring', stiffness: 400, damping: 28 };
@@ -98,17 +99,49 @@ function TopIconButton({ icon, onClick, label }) {
   );
 }
 
+function UniverseToggle({ lang, setLang }) {
+  return (
+    <motion.button
+      onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
+      whileTap={{ scale: 0.93 }}
+      title={lang === 'zh' ? 'Switch to English' : '切换中文'}
+      style={{
+        background: 'rgba(255,255,255,0.10)',
+        border: '1px solid rgba(255,255,255,0.18)',
+        borderRadius: '14px',
+        padding: '3px 10px',
+        cursor: 'pointer',
+        fontSize: '11px',
+        fontWeight: 700,
+        color: 'rgba(232,228,220,0.85)',
+        fontFamily: 'inherit',
+        letterSpacing: '0.06em',
+        lineHeight: 1.4,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+        flexShrink: 0,
+      }}
+    >
+      <span style={{ opacity: lang === 'zh' ? 1 : 0.45 }}>中</span>
+      <span style={{ opacity: 0.3, fontSize: '9px' }}>|</span>
+      <span style={{ opacity: lang === 'en' ? 1 : 0.45 }}>EN</span>
+    </motion.button>
+  );
+}
+
 // ─── 手机端底部 tab bar ─────────────────────────────────────────────
 function MobileBottomNav({ guest, onLocked }) {
   const { pathname } = useLocation();
   const { totalUnread } = useChat();
   const { name, avatarUrl } = useUser();
+  const { t } = useLanguage();
 
   const tabs = [
-    { to: '/discover', label: '首页', icon: homeIcon },
-    { to: '/review', label: '复盘', icon: reviewIcon },
-    { to: '/chat', label: '聊天', icon: chatIcon, dot: totalUnread > 0 },
-    { to: '/me', label: '我的', profile: true },
+    { to: '/discover', label: t('nav.home'), icon: homeIcon },
+    { to: '/review', label: t('nav.review'), icon: reviewIcon },
+    { to: '/chat', label: t('nav.chat'), icon: chatIcon, dot: totalUnread > 0 },
+    { to: '/me', label: t('nav.profile'), profile: true },
   ];
 
   return (
@@ -116,7 +149,7 @@ function MobileBottomNav({ guest, onLocked }) {
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
       height: `calc(${MOBILE_BOTTOM_H}px + env(safe-area-inset-bottom))`,
       paddingBottom: 'env(safe-area-inset-bottom)',
-      background: 'rgba(44,48,37,0.97)',
+      background: 'var(--color-nav-bg)',
       backdropFilter: 'blur(20px) saturate(180%)',
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
       borderTop: '1px solid rgba(255,255,255,0.06)',
@@ -140,7 +173,7 @@ function MobileBottomNav({ guest, onLocked }) {
                 <span style={{
                   width: '25px', height: '25px', borderRadius: '50%', overflow: 'hidden',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  background: active ? '#a4b9b5' : '#7d9b96', color: '#2C3025',
+                  background: active ? 'var(--color-sage)' : 'var(--color-sage-dark)', color: '#2C3025',
                   fontSize: '12px', fontWeight: 700,
                   border: active ? '1.5px solid rgba(164,185,181,0.7)' : '1.5px solid transparent',
                 }}>
@@ -180,10 +213,13 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const { name, avatarUrl } = useUser();
+  const { lang, setLang, t } = useLanguage();
   const guest = isConfigured && !authUser;
   const isMobile = useIsMobile();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showDebaterModal, setShowDebaterModal] = useState(false);
+
+  const nav = NAV_DEFS.map(d => ({ ...d, label: t(d.labelKey) }));
 
   // ─── 手机端：极简顶栏 + 底部 tab bar ───────────────────────────
   if (isMobile) {
@@ -192,7 +228,7 @@ export default function Navbar() {
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
           height: MOBILE_TOP_H_TOTAL,
-          background: 'rgba(44,48,37,0.97)',
+          background: 'var(--color-nav-bg)',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -206,19 +242,20 @@ export default function Navbar() {
             {!guest && (
               <>
                 <OnboardingButton />
-                <TopIconButton icon={leaderboardIcon} label="积分榜" onClick={() => navigate('/leaderboard')} />
-                <TopIconButton icon={findFriendsIcon} label="发现好友" onClick={() => setShowDebaterModal(true)} />
+                {lang === 'zh' && <TopIconButton icon={leaderboardIcon} label={t('nav.leaderboard')} onClick={() => navigate('/leaderboard')} />}
+                <TopIconButton icon={findFriendsIcon} label={t('nav.find_friends')} onClick={() => setShowDebaterModal(true)} />
               </>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', minWidth: '40px', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '40px', justifyContent: 'flex-end' }}>
+            <UniverseToggle lang={lang} setLang={setLang} />
             {guest ? (
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => navigate('/login')}
-                style={{ padding: '6px 16px', background: '#a4b9b5', color: '#2C3025', border: 'none', borderRadius: '18px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
+                style={{ padding: '6px 16px', background: 'var(--color-sage)', color: '#2C3025', border: 'none', borderRadius: '18px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
               >
-                登录 / 注册
+                {t('nav.login')}
               </motion.button>
             ) : (
               <NotificationBell isMobile />
@@ -242,7 +279,7 @@ export default function Navbar() {
     <nav style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
       height: '60px',
-      background: 'rgba(44,48,37,0.97)',
+      background: 'var(--color-nav-bg)',
       backdropFilter: 'blur(20px) saturate(180%)',
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
       borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -261,7 +298,7 @@ export default function Navbar() {
 
       {/* Nav tabs */}
       <motion.div layoutRoot style={{ display: 'flex', gap: '4px', flex: 1, justifyContent: 'center' }}>
-        {NAV.map(({ to, label, icon }) => {
+        {nav.map(({ to, label, icon }) => {
           const active = pathname.startsWith(to);
           const showUnreadDot = to === '/chat';
           // 访客只能停留在「发现」，点其他 tab 弹登录提示
@@ -282,15 +319,16 @@ export default function Navbar() {
         })}
       </motion.div>
 
-      {/* Right section: notification bell + profile avatar */}
+      {/* Right section: universe toggle + notification bell + profile avatar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, marginLeft: '40px' }}>
+        <UniverseToggle lang={lang} setLang={setLang} />
         {guest ? (
           <motion.button
             whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             onClick={() => navigate('/login')}
-            style={{ padding: '8px 20px', background: '#a4b9b5', color: '#2C3025', border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
+            style={{ padding: '8px 20px', background: 'var(--color-sage)', color: '#2C3025', border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}
           >
-            登录 / 注册
+            {t('nav.login')}
           </motion.button>
         ) : (
         <>
@@ -305,7 +343,7 @@ export default function Navbar() {
             >
               <div style={{
                 width: '32px', height: '32px', borderRadius: '50%',
-                backgroundColor: pathname === '/me' ? '#a4b9b5' : '#7d9b96',
+                backgroundColor: pathname === '/me' ? 'var(--color-sage)' : 'var(--color-sage-dark)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: '#2C3025', fontSize: '13px', fontWeight: 700,
                 border: pathname === '/me' ? '2px solid rgba(164,185,181,0.6)' : '2px solid transparent',
@@ -363,7 +401,7 @@ function NavTab({ label, icon, active, showUnreadDot }) {
           layoutId="nav-underline"
           style={{
             position: 'absolute', bottom: '-1px', left: '20px', right: '20px',
-            height: '2px', backgroundColor: '#a4b9b5', borderRadius: '1px',
+            height: '2px', backgroundColor: 'var(--color-sage)', borderRadius: '1px',
           }}
           transition={spring}
         />
