@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFriend } from '../contexts/FriendContext';
 import { useUser } from '../contexts/UserContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
 import ConfirmModal from '../components/ConfirmModal';
 import { useIsMobile, MOBILE_FULL_HEIGHT } from '../lib/useIsMobile';
@@ -99,6 +100,7 @@ function AnimatedEdge({ posA, posB, col, opacity, strokeWidth, isCenter }) {
 }
 
 export default function Network() {
+  const { t } = useLanguage();
   const { friends, sentRequests, receivedRequests, sendRequest, cancelRequest, acceptRequest, unfriend } = useFriend();
   const { id: selfId, name: selfName, username: selfUsername, school: selfSchool, region: selfRegion, avg_score: selfAvgScore, avatarUrl: selfAvatarUrl } = useUser();
   const [panelNode, setPanelNode] = useState(null);
@@ -384,11 +386,11 @@ export default function Network() {
               ) : (
                 <>
                   <Link to={`/profile/${panelNodeData.id}`} style={{ textDecoration: 'none' }}>
-                    <button style={{ padding: '7px 12px', background: 'rgba(164,185,181,0.08)', border: '1px solid rgba(164,185,181,0.2)', borderRadius: '20px', fontSize: '11px', color: 'rgba(164,185,181,0.7)', cursor: 'pointer', fontFamily: 'inherit' }}>查看档案</button>
+                    <button style={{ padding: '7px 12px', background: 'rgba(164,185,181,0.08)', border: '1px solid rgba(164,185,181,0.2)', borderRadius: '20px', fontSize: '11px', color: 'rgba(164,185,181,0.7)', cursor: 'pointer', fontFamily: 'inherit' }}>{t('network.view')}</button>
                   </Link>
                   {friendStatus(panelNodeData.id) === 'friend' && <button onClick={() => setConfirmingUnfriendId(panelNodeData.id)} style={{ padding: '7px 12px', background: 'rgba(90,143,122,0.12)', border: '1px solid rgba(90,143,122,0.28)', borderRadius: '20px', fontSize: '11px', color: '#5a8f7a', cursor: 'pointer', fontFamily: 'inherit' }}>✓ 好友</button>}
                   {friendStatus(panelNodeData.id) === 'sent' && <button onClick={() => cancelRequest(panelNodeData.id)} style={{ padding: '7px 12px', background: 'rgba(164,185,181,0.06)', border: '1px solid rgba(164,185,181,0.14)', borderRadius: '20px', fontSize: '11px', color: 'rgba(232,228,220,0.32)', cursor: 'pointer', fontFamily: 'inherit' }}>已发送</button>}
-                  {friendStatus(panelNodeData.id) === 'received' && <button onClick={() => acceptRequest(panelNodeData.id)} style={{ padding: '7px 12px', background: 'rgba(192,122,58,0.14)', border: '1px solid rgba(192,122,58,0.28)', borderRadius: '20px', fontSize: '11px', color: '#c07a3a', cursor: 'pointer', fontFamily: 'inherit' }}>接受请求</button>}
+                  {friendStatus(panelNodeData.id) === 'received' && <button onClick={() => acceptRequest(panelNodeData.id)} style={{ padding: '7px 12px', background: 'rgba(192,122,58,0.14)', border: '1px solid rgba(192,122,58,0.28)', borderRadius: '20px', fontSize: '11px', color: '#c07a3a', cursor: 'pointer', fontFamily: 'inherit' }}>{t('network.accept')}</button>}
                   {friendStatus(panelNodeData.id) === 'none' && !greetingOpen && (
                     <button onClick={() => { setGreetingOpen(true); setGreetingDraft(''); }} style={{ padding: '7px 12px', background: 'rgba(164,185,181,0.12)', border: '1px solid rgba(164,185,181,0.28)', borderRadius: '20px', fontSize: '11px', color: '#a4b9b5', cursor: 'pointer', fontFamily: 'inherit' }}>+ 加好友</button>
                   )}
@@ -399,7 +401,7 @@ export default function Network() {
                         onKeyDown={e => { if (e.key === 'Enter') { sendRequest(panelNodeData.id, greetingDraft); setGreetingOpen(false); } if (e.key === 'Escape') setGreetingOpen(false); }}
                         style={{ padding: '5px 8px', border: '1px solid rgba(164,185,181,0.4)', borderRadius: '6px', fontSize: '11px', outline: 'none', fontFamily: 'inherit', background: 'rgba(255,255,255,0.08)', color: '#E8E4DC' }} />
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <button onClick={() => { sendRequest(panelNodeData.id, greetingDraft); setGreetingOpen(false); }} style={{ flex: 1, padding: '4px', fontSize: '10px', fontWeight: 600, background: 'rgba(164,185,181,0.2)', color: '#a4b9b5', border: '1px solid rgba(164,185,181,0.3)', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>发送</button>
+                        <button onClick={() => { sendRequest(panelNodeData.id, greetingDraft); setGreetingOpen(false); }} style={{ flex: 1, padding: '4px', fontSize: '10px', fontWeight: 600, background: 'rgba(164,185,181,0.2)', color: '#a4b9b5', border: '1px solid rgba(164,185,181,0.3)', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>{t('common.send')}</button>
                         <button onClick={() => setGreetingOpen(false)} style={{ padding: '4px 6px', fontSize: '10px', background: 'transparent', color: 'rgba(232,228,220,0.4)', border: '1px solid rgba(232,228,220,0.1)', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>取消</button>
                       </div>
                     </div>

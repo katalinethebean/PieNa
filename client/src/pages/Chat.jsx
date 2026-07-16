@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useChat } from '../contexts/ChatContext';
 import { useFriend } from '../contexts/FriendContext';
 import { useUser } from '../contexts/UserContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabase';
 import { useIsMobile, MOBILE_FULL_HEIGHT } from '../lib/useIsMobile';
 
@@ -225,6 +226,7 @@ function ConversationRow({ conversation, active, onClick, note }) {
 
 function ChatThread({ otherId, showBack }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { id: selfId } = useUser();
   const { sendMessage, markRead, conversations, convoSettings, blockedIds } = useChat();
   const { friends } = useFriend();
@@ -371,7 +373,7 @@ function ChatThread({ otherId, showBack }) {
       {/* Messages */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {!loading && visibleMessages.length === 0 && (
-          <p style={{ fontSize: '13px', color: '#c8b89a', textAlign: 'center', margin: 'auto 0' }}>还没有消息，打个招呼吧</p>
+          <p style={{ fontSize: '13px', color: '#c8b89a', textAlign: 'center', margin: 'auto 0' }}>{t('chat.empty')}</p>
         )}
         {visibleMessages.map(m => {
           const mine = m.sender_id === selfId;
@@ -410,7 +412,7 @@ function ChatThread({ otherId, showBack }) {
               onCompositionStart={() => { composingRef.current = true; }}
               onCompositionEnd={() => { composingRef.current = false; }}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !composingRef.current) { e.preventDefault(); handleSend(); } }}
-              placeholder="输入消息…"
+              placeholder={t('chat.placeholder')}
               maxLength={2000}
               style={{
                 flex: 1, padding: '10px 14px', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '20px',
@@ -426,7 +428,7 @@ function ChatThread({ otherId, showBack }) {
                 color: draft.trim() ? '#E8E4DC' : '#9a8570',
                 cursor: draft.trim() ? 'pointer' : 'not-allowed',
               }}>
-              发送
+              {t('chat.send')}
             </motion.button>
           </div>
         ) : (
@@ -441,16 +443,17 @@ function ChatThread({ otherId, showBack }) {
 export default function Chat() {
   const { id: otherId } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { conversations, convoSettings } = useChat();
   const isMobile = useIsMobile();
 
   const list = (
     <>
-      <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.12em', padding: '16px 16px 10px' }}>私信</p>
+      <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.12em', padding: '16px 16px 10px' }}>{t('chat.title')}</p>
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {conversations.length === 0 && (
           <div style={{ padding: '24px 20px', textAlign: 'center' }}>
-            <p style={{ fontSize: '12px', color: '#c8b89a' }}>还没有聊天哦</p>
+            <p style={{ fontSize: '12px', color: '#c8b89a' }}>{t('chat.empty')}</p>
           </div>
         )}
         {conversations.map(c => (
@@ -491,7 +494,7 @@ export default function Chat() {
             <ChatThread key={otherId} otherId={otherId} />
           ) : (
             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <p style={{ fontSize: '13px', color: '#c8b89a' }}>选择一个对话开始聊天</p>
+              <p style={{ fontSize: '13px', color: '#c8b89a' }}>{t('chat.select')}</p>
             </div>
           )}
         </div>

@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, isConfigured } from '../lib/supabase';
+import { useLanguage } from '../contexts/LanguageContext';
 import TurnstileWidget, { TURNSTILE_SITE_KEY } from '../components/TurnstileWidget';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [mode, setMode] = useState('login');
   const [loginMethod, setLoginMethod] = useState('email');
   const [loading, setLoading] = useState(false);
@@ -226,7 +228,7 @@ export default function Login() {
                   marginBottom: '-1px', transition: 'all 0.15s',
                 }}
               >
-                {m === 'login' ? '登录' : '注册'}
+                {m === 'login' ? t('login.login') : t('login.register')}
               </button>
             ))}
           </div>
@@ -254,7 +256,7 @@ export default function Login() {
                         transition: 'all 0.15s',
                       }}
                     >
-                      {m === 'email' ? '邮箱登录' : '用户名登录'}
+                      {m === 'email' ? t('login.email') : t('login.login')}
                     </button>
                   ))}
                 </div>
@@ -285,14 +287,14 @@ export default function Login() {
 
               {(mode === 'register' || (mode === 'login' && loginMethod === 'email')) && (
                 <div style={{ marginBottom: '16px' }}>
-                  <label style={labelStyle}>电子邮箱 <span style={{ color: '#a03030' }}>*</span></label>
+                  <label style={labelStyle}>{t('login.email')} <span style={{ color: '#a03030' }}>*</span></label>
                   <input style={inputStyle} type="email" placeholder="your@email.com" value={form.email}
                     onChange={e => setField('email', e.target.value)} required autoComplete="email" />
                 </div>
               )}
 
               <div style={{ marginBottom: '24px' }}>
-                <label style={labelStyle}>密码 <span style={{ color: '#a03030' }}>*</span></label>
+                <label style={labelStyle}>{t('login.password')} <span style={{ color: '#a03030' }}>*</span></label>
                 <div style={{ position: 'relative' }}>
                   <input style={{ ...inputStyle, paddingRight: '42px' }} type={showPwd ? 'text' : 'password'}
                     placeholder={mode === 'register' ? '至少 6 位' : '请输入密码'}
@@ -342,7 +344,9 @@ export default function Login() {
                   transition: 'background-color 0.15s',
                 }}
               >
-                {loading ? '处理中...' : mode === 'login' ? (loginMethod === 'email' ? '邮箱登录' : '用户名登录') : '注册'}
+                {loading
+                  ? (mode === 'login' ? t('login.logging_in') : t('login.registering'))
+                  : mode === 'login' ? t('login.login') : t('login.register')}
               </motion.button>
             </motion.form>
           </AnimatePresence>
