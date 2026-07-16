@@ -19,8 +19,18 @@
   --color-success:          #5a8f7a;
   --color-warning:          #c07a3a;
   --color-error:            #a03030;
+  --color-nav-bg:           rgba(44,48,37,0.97);
 
   --font-sans: "Noto Serif SC", "Source Han Serif SC", "思源宋体", "宋体", "SimSun", "STSong", Georgia, serif;
+}
+
+/* ── English universe color overrides ─────────── */
+html[data-universe="en"] {
+  --color-sage:             #8BABC9;
+  --color-sage-dark:        #5B7EA6;
+  --color-sage-muted:       #C5D8EC;
+  --color-success:          #4A7BA6;
+  --color-nav-bg:           rgba(30,45,72,0.97);
 }
 
 * {
@@ -138,5 +148,5 @@ body {
 /* ── Scrollbar ────────────────────────────────────── */
 ::-webkit-scrollbar         { width: 5px; }
 ::-webkit-scrollbar-track   { background: #d4cfc6; }
-::-webkit-scrollbar-thumb   { background: #a4b9b5; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #7d9b96; }
+::-webkit-scrollbar-thumb   { background: var(--color-sage); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-sage-dark); }
