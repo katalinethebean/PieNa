@@ -191,6 +191,7 @@ export default {
   'review.no_sessions': '暂无比赛记录',
   'review.start': '开始复盘',
   'review.analyzing': '分析中…',
+  'review.history': '历史记录',
 
   // report
   'report.title': '比赛详情',

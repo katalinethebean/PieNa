@@ -191,6 +191,7 @@ export default {
   'review.no_sessions': 'No match records yet',
   'review.start': 'Start Review',
   'review.analyzing': 'Analyzing…',
+  'review.history': 'History',
 
   // report
   'report.title': 'Match Details',
