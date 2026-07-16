@@ -518,6 +518,19 @@ export default function Profile({ self }) {
   const displayHonors = (profile.honors || []).filter(h => h);
   const displayAvatarUrl = isSelf ? user.avatarUrl : profile.avatar_url;
 
+  // Header gradient tilts green (Chinese debates) → blue (English debates)
+  // based on how many of this person's sessions are English. With no sessions,
+  // fall back to the owner's language preference (blue if they started in English).
+  const enSessions = sessions.filter(s => s.language === 'en').length;
+  const enRatio = sessions.length > 0
+    ? enSessions / sessions.length
+    : ((isSelf ? lang : profile.language) === 'en' ? 1 : 0);
+  const lerp = (a, b) => Math.round(a + (b - a) * enRatio);
+  // green stops (zh) → blue stops (en)
+  const midC = `${lerp(125, 96)}, ${lerp(155, 132)}, ${lerp(150, 196)}`;
+  const endC = `${lerp(90, 74)}, ${lerp(143, 108)}, ${lerp(122, 178)}`;
+  const headerGradient = `linear-gradient(135deg, rgba(44,48,37,0.65) 0%, rgba(${midC},0.3) 60%, rgba(${endC},0.28) 100%)`;
+
   const inputStyle = {
     width: '100%', padding: '9px 13px', border: '1px solid rgba(200,184,154,0.5)',
     fontSize: '14px', color: '#2C3025', backgroundColor: 'rgba(255,255,255,0.5)',
@@ -553,7 +566,7 @@ export default function Profile({ self }) {
 
           {/* Profile header card */}
           <motion.div variants={item} className="glass-card" style={{ marginBottom: '20px', overflow: 'hidden' }}>
-            <div style={{ height: '72px', background: 'linear-gradient(135deg, rgba(44,48,37,0.65) 0%, rgba(125,155,150,0.3) 60%, rgba(90,143,122,0.2) 100%)' }} />
+            <div style={{ height: '72px', background: headerGradient }} />
 
             <div style={{ padding: '0 28px 28px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: '-26px', marginBottom: '16px' }}>

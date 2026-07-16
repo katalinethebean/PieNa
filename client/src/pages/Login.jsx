@@ -7,7 +7,9 @@ import TurnstileWidget, { TURNSTILE_SITE_KEY } from '../components/TurnstileWidg
 
 export default function Login() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, lang, setLang } = useLanguage();
+  const accent = lang === 'en' ? '#8aa0c8' : '#a4b9b5';
+  const accentSoft = lang === 'en' ? 'rgba(138,160,200,0.15)' : 'rgba(164,185,181,0.15)';
   const [mode, setMode] = useState('login');
   const [loginMethod, setLoginMethod] = useState('email');
   const [loading, setLoading] = useState(false);
@@ -46,17 +48,17 @@ export default function Login() {
     setLoading(true);
     setError('');
     if (!isConfigured) { navigate('/discover'); return; }
-    if (TURNSTILE_SITE_KEY && !captchaToken) { setError('请先完成人机验证'); setLoading(false); return; }
+    if (TURNSTILE_SITE_KEY && !captchaToken) { setError(t('login.err_captcha')); setLoading(false); return; }
 
     let email = form.email;
 
     if (loginMethod === 'username') {
-      if (!form.loginUsername.trim()) { setError('请输入用户名'); setLoading(false); return; }
+      if (!form.loginUsername.trim()) { setError(t('login.err_username_required')); setLoading(false); return; }
       const { data: foundEmail, error: lookupError } = await supabase
         .rpc('get_email_by_username', { p_username: form.loginUsername.toLowerCase() });
 
       if (lookupError || !foundEmail) {
-        setError('找不到该用户名，请检查后重试');
+        setError(t('login.err_username_not_found'));
         setLoading(false);
         return;
       }
@@ -69,7 +71,7 @@ export default function Login() {
       options: { captchaToken: captchaToken || undefined },
     });
     if (signInError) {
-      setError('账号或密码不正确，请重试');
+      setError(t('login.err_credentials'));
       resetCaptcha();
       setLoading(false);
       return;
@@ -79,12 +81,12 @@ export default function Login() {
 
   async function handleRegister(e) {
     e.preventDefault();
-    if (!form.name.trim()) { setError('请输入你的昵称'); return; }
-    if (!form.username.trim()) { setError('请输入用户名'); return; }
-    if (!/^[a-zA-Z0-9_]+$/.test(form.username)) { setError('用户名只能含英文字母、数字和下划线'); return; }
-    if (!form.email.trim()) { setError('请输入邮箱'); return; }
-    if (form.password.length < 6) { setError('密码至少需要 6 位'); return; }
-    if (TURNSTILE_SITE_KEY && !captchaToken) { setError('请先完成人机验证'); return; }
+    if (!form.name.trim()) { setError(t('login.err_nickname_required')); return; }
+    if (!form.username.trim()) { setError(t('login.err_username_required')); return; }
+    if (!/^[a-zA-Z0-9_]+$/.test(form.username)) { setError(t('login.err_username_chars')); return; }
+    if (!form.email.trim()) { setError(t('login.err_email_required')); return; }
+    if (form.password.length < 6) { setError(t('login.err_password_len')); return; }
+    if (TURNSTILE_SITE_KEY && !captchaToken) { setError(t('login.err_captcha')); return; }
 
     setLoading(true);
     setError('');
@@ -96,7 +98,7 @@ export default function Login() {
 
     const { data: available } = await supabase.rpc('is_username_available', { p_username: form.username });
     if (!available) {
-      setError('该用户名已被使用，请换一个');
+      setError(t('login.err_username_taken'));
       setLoading(false);
       return;
     }
@@ -120,9 +122,9 @@ export default function Login() {
       resetCaptcha();
       const msg = signUpError.message || '';
       if (msg.includes('already registered') || msg.includes('already been registered')) {
-        setError('该邮箱已注册，请直接登录');
+        setError(t('login.err_email_taken'));
       } else {
-        setError(msg || '注册失败，请重试');
+        setError(msg || t('login.err_register_failed'));
       }
       setLoading(false);
       return;
@@ -151,7 +153,7 @@ export default function Login() {
     if (data.session) {
       navigate('/discover');
     } else {
-      setSuccess('注册成功！小撇已向你发出验证信息，请在邮箱中点击链接完成验证。注意查看垃圾邮件。');
+      setSuccess(t('login.register_success'));
       setLoading(false);
       setMode('login');
     }
@@ -181,6 +183,22 @@ export default function Login() {
       padding: '24px',
       position: 'relative', overflow: 'hidden',
     }}>
+      {/* Language toggle */}
+      <button type="button" onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
+        title={lang === 'zh' ? 'Switch to English' : '切换中文'}
+        style={{
+          position: 'absolute', top: '20px', right: '20px', zIndex: 2,
+          background: 'rgba(44,48,37,0.06)', border: '1px solid rgba(44,48,37,0.12)',
+          borderRadius: '14px', padding: '4px 12px', cursor: 'pointer',
+          fontSize: '11px', fontWeight: 700, color: '#6b5c45',
+          fontFamily: 'inherit', letterSpacing: '0.06em',
+          display: 'flex', alignItems: 'center', gap: '4px', lineHeight: 1.4,
+        }}>
+        <span style={{ opacity: lang === 'zh' ? 1 : 0.4 }}>中</span>
+        <span style={{ opacity: 0.3, fontSize: '9px' }}>|</span>
+        <span style={{ opacity: lang === 'en' ? 1 : 0.4 }}>EN</span>
+      </button>
+
       {/* Background watermark */}
       <div style={{
         position: 'absolute', left: '50%', top: '50%',
@@ -189,7 +207,7 @@ export default function Login() {
         color: 'rgba(44,48,37,0.04)', filter: 'blur(2px)',
         lineHeight: 1, userSelect: 'none', pointerEvents: 'none',
         letterSpacing: '-0.05em',
-      }}>辩</div>
+      }}>{lang === 'en' ? 'D' : '辩'}</div>
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -206,9 +224,9 @@ export default function Login() {
           }}>
             撇捺
           </h1>
-          <div style={{ width: '32px', height: '2px', backgroundColor: '#a4b9b5', margin: '0 auto 12px' }} />
+          <div style={{ width: '32px', height: '2px', backgroundColor: accent, margin: '0 auto 12px' }} />
           <p style={{ color: '#9a8570', fontSize: '12px', letterSpacing: '0.1em', fontWeight: 600 }}>
-            用 AI 分析你的辩论表现
+            {t('login.subtitle')}
           </p>
         </div>
 
@@ -224,7 +242,7 @@ export default function Login() {
                   fontFamily: 'inherit', letterSpacing: '0.06em',
                   backgroundColor: 'transparent',
                   color: mode === m ? '#2C3025' : '#9a8570',
-                  borderBottom: mode === m ? '2px solid #a4b9b5' : '2px solid transparent',
+                  borderBottom: mode === m ? `2px solid ${accent}` : '2px solid transparent',
                   marginBottom: '-1px', transition: 'all 0.15s',
                 }}
               >
@@ -248,15 +266,15 @@ export default function Login() {
                     <button key={m} type="button" onClick={() => switchLoginMethod(m)}
                       style={{
                         flex: 1, padding: '7px', borderRadius: '8px',
-                        border: `1px solid ${loginMethod === m ? '#a4b9b5' : 'rgba(200,184,154,0.5)'}`,
+                        border: `1px solid ${loginMethod === m ? accent : 'rgba(200,184,154,0.5)'}`,
                         cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit', letterSpacing: '0.05em',
                         fontWeight: loginMethod === m ? 700 : 400,
-                        backgroundColor: loginMethod === m ? 'rgba(164,185,181,0.15)' : 'transparent',
+                        backgroundColor: loginMethod === m ? accentSoft : 'transparent',
                         color: loginMethod === m ? '#2C3025' : '#9a8570',
                         transition: 'all 0.15s',
                       }}
                     >
-                      {m === 'email' ? t('login.email') : t('login.login')}
+                      {m === 'email' ? t('login.email') : t('login.username')}
                     </button>
                   ))}
                 </div>
@@ -265,13 +283,13 @@ export default function Login() {
               {mode === 'register' && (
                 <>
                   <div style={{ marginBottom: '16px' }}>
-                    <label style={labelStyle}>昵称 <span style={{ color: '#a03030' }}>*</span></label>
-                    <input style={inputStyle} placeholder="请输入你的昵称" value={form.name}
+                    <label style={labelStyle}>{t('login.nickname')} <span style={{ color: '#a03030' }}>*</span></label>
+                    <input style={inputStyle} placeholder={t('login.ph_nickname')} value={form.name}
                       onChange={e => setField('name', e.target.value)} required />
                   </div>
                   <div style={{ marginBottom: '16px' }}>
-                    <label style={labelStyle}>用户名 <span style={{ color: '#a03030' }}>*</span></label>
-                    <input style={inputStyle} placeholder="英文、数字、下划线" value={form.username}
+                    <label style={labelStyle}>{t('login.username')} <span style={{ color: '#a03030' }}>*</span></label>
+                    <input style={inputStyle} placeholder={t('login.ph_username')} value={form.username}
                       onChange={e => setField('username', e.target.value)} required autoComplete="username" />
                   </div>
                 </>
@@ -279,8 +297,8 @@ export default function Login() {
 
               {mode === 'login' && loginMethod === 'username' && (
                 <div style={{ marginBottom: '16px' }}>
-                  <label style={labelStyle}>用户名 <span style={{ color: '#a03030' }}>*</span></label>
-                  <input style={inputStyle} placeholder="your_username" value={form.loginUsername}
+                  <label style={labelStyle}>{t('login.username')} <span style={{ color: '#a03030' }}>*</span></label>
+                  <input style={inputStyle} placeholder={t('login.ph_login_username')} value={form.loginUsername}
                     onChange={e => setField('loginUsername', e.target.value)} required autoComplete="username" />
                 </div>
               )}
@@ -297,7 +315,7 @@ export default function Login() {
                 <label style={labelStyle}>{t('login.password')} <span style={{ color: '#a03030' }}>*</span></label>
                 <div style={{ position: 'relative' }}>
                   <input style={{ ...inputStyle, paddingRight: '42px' }} type={showPwd ? 'text' : 'password'}
-                    placeholder={mode === 'register' ? '至少 6 位' : '请输入密码'}
+                    placeholder={mode === 'register' ? t('login.ph_password_register') : t('login.ph_password_login')}
                     value={form.password} onChange={e => setField('password', e.target.value)}
                     required autoComplete={mode === 'register' ? 'new-password' : 'current-password'} />
                   <button type="button" onClick={() => setShowPwd(v => !v)}
@@ -353,7 +371,7 @@ export default function Login() {
         </div>
 
         <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '11px', color: '#9a8570', letterSpacing: '0.04em' }}>
-          支持 QQ邮箱、163、126、Gmail 等各类邮箱
+          {t('login.email_footer')}
         </p>
       </motion.div>
     </div>
