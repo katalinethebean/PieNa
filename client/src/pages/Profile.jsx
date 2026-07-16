@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { useFriend } from '../contexts/FriendContext';
 import { useUser } from '../contexts/UserContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { formatChineseDate, API_URL } from '../lib/utils';
 import { supabase, isConfigured } from '../lib/supabase';
 import ConfirmModal from '../components/ConfirmModal';
@@ -21,7 +23,7 @@ const SCORE_LABELS = [
   { key: 'appeal_score', label: '吸引' },
 ];
 
-const scoreColor = s => s >= 8 ? '#5a8f7a' : s >= 7 ? '#7d9b96' : '#c07a3a';
+const scoreColor = s => s >= 8 ? 'var(--color-success)' : s >= 7 ? 'var(--color-sage-dark)' : '#c07a3a';
 const spring = { type: 'spring', stiffness: 300, damping: 22 };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 200, damping: 24 } } };
 const ctr = { hidden: {}, show: { transition: { staggerChildren: 0.08 } } };
@@ -62,6 +64,7 @@ function avgByDimension(sessions) {
 }
 
 function FriendButton({ id }) {
+  const { lang, t } = useLanguage();
   const { friends, sentRequests, receivedRequests, sendRequest, cancelRequest, acceptRequest, unfriend } = useFriend();
   const [confirmingUnfriend, setConfirmingUnfriend] = useState(false);
   const [greetingOpen, setGreetingOpen] = useState(false);
@@ -74,8 +77,8 @@ function FriendButton({ id }) {
   if (isFriend) return (
     <>
       <motion.button whileTap={{ scale: 0.96 }} onClick={() => setConfirmingUnfriend(true)}
-        style={{ ...btnBase, background: 'rgba(90,143,122,0.12)', border: '1px solid rgba(90,143,122,0.3)', color: '#5a8f7a' }}>
-        ✓ 已是好友
+        style={{ ...btnBase, background: 'rgba(90,143,122,0.12)', border: '1px solid rgba(90,143,122,0.3)', color: 'var(--color-success)' }}>
+        {t('profile.already_friends')}
       </motion.button>
       {confirmingUnfriend && (
         <ConfirmModal
@@ -92,7 +95,7 @@ function FriendButton({ id }) {
   if (hasSent) return (
     <motion.button whileTap={{ scale: 0.96 }} onClick={() => cancelRequest(id)}
       style={{ ...btnBase, background: 'rgba(217,205,181,0.4)', border: '1px solid rgba(200,184,154,0.4)', color: '#9a8570' }}>
-      已发送请求
+      {t('profile.friend_sent')}
     </motion.button>
   );
   if (hasReceived) return (
@@ -104,7 +107,7 @@ function FriendButton({ id }) {
   if (!greetingOpen) return (
     <motion.button whileTap={{ scale: 0.96 }} onClick={() => { setGreetingOpen(true); setGreetingDraft(''); }}
       style={{ ...btnBase, background: '#2C3025', color: '#E8E4DC' }}>
-      + 加为好友
+      {t('profile.add_friend')}
     </motion.button>
   );
   return (
@@ -115,9 +118,9 @@ function FriendButton({ id }) {
       <div style={{ display: 'flex', gap: '6px' }}>
         <motion.button whileTap={{ scale: 0.96 }}
           onClick={() => { sendRequest(id, greetingDraft); setGreetingOpen(false); }}
-          style={{ ...btnBase, padding: '7px 14px', background: '#2C3025', color: '#E8E4DC' }}>发送请求</motion.button>
+          style={{ ...btnBase, padding: '7px 14px', background: '#2C3025', color: '#E8E4DC' }}>{t('profile.add_friend')}</motion.button>
         <motion.button whileTap={{ scale: 0.96 }} onClick={() => setGreetingOpen(false)}
-          style={{ ...btnBase, padding: '7px 14px', background: 'transparent', border: '1px solid rgba(200,184,154,0.5)', color: '#9a8570' }}>取消</motion.button>
+          style={{ ...btnBase, padding: '7px 14px', background: 'transparent', border: '1px solid rgba(200,184,154,0.5)', color: '#9a8570' }}>{t('profile.cancel')}</motion.button>
       </div>
     </div>
   );
@@ -125,6 +128,8 @@ function FriendButton({ id }) {
 
 // ── Settings Modal ────────────────────────────────────────────────────────────
 function SettingsModal({ user, onClose, navigate }) {
+  const { lang, t } = useLanguage();
+  const { user: authUser } = useAuth();
   const [email, setEmail] = useState('');
   const [newUsername, setNewUsername] = useState('');
   const [wechat, setWechat] = useState(user.wechat || '');
@@ -163,7 +168,7 @@ function SettingsModal({ user, onClose, navigate }) {
       await supabase.from('profiles').update({ user_wechat: wechat }).eq('id', user.id);
     }
     setBusy('');
-    setMsg({ wechat: '已保存' });
+    setMsg({ wechat: t('settings.saved') });
   }
 
   async function togglePublic() {
@@ -173,7 +178,7 @@ function SettingsModal({ user, onClose, navigate }) {
     if (isConfigured && user.id) {
       await supabase.from('profiles').update({ is_public: next }).eq('id', user.id);
     }
-    setMsg({ privacy: next ? '档案已设为公开' : '档案已设为私密' });
+    setMsg({ privacy: t('settings.saved') });
   }
 
   async function logout() {
@@ -205,7 +210,7 @@ function SettingsModal({ user, onClose, navigate }) {
   };
   const rowStyle = { display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: '20px', borderBottom: '1px solid rgba(200,184,154,0.25)' };
   const labelStyle = { fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.08em' };
-  const feedbackStyle = ok => ({ fontSize: '11px', color: ok ? '#5a8f7a' : '#a03030' });
+  const feedbackStyle = ok => ({ fontSize: '11px', color: ok ? 'var(--color-success)' : '#a03030' });
   const saveBtn = (label, onClick, loading) => (
     <motion.button whileTap={{ scale: 0.97 }} onClick={onClick} disabled={!!loading}
       style={{ padding: '8px 16px', background: loading ? '#c8b89a' : '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
@@ -220,85 +225,86 @@ function SettingsModal({ user, onClose, navigate }) {
         style={{ width: '100%', maxWidth: '420px', background: '#F2EDE4', borderRadius: '16px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '90vh', overflowY: 'auto' }}>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', margin: 0 }}>设置</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', margin: 0 }}>{t('settings.title')}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a8570', fontSize: '18px', lineHeight: 1, padding: '2px 6px' }}>×</button>
         </div>
 
         {/* Username */}
         <div style={rowStyle}>
-          <span style={labelStyle}>更改用户名</span>
-          <p style={{ fontSize: '11px', color: '#9a8570', margin: 0 }}>当前：@{user.username}</p>
+          <span style={labelStyle}>{t('settings.username_section')}</span>
+          <p style={{ fontSize: '11px', color: '#9a8570', margin: 0 }}>{t('settings.username_current', { username: user.username })}</p>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <input style={inputStyle} placeholder="新用户名（英文、数字、下划线）" value={newUsername}
+            <input style={inputStyle} placeholder={t('settings.username_placeholder')} value={newUsername}
               onChange={e => { setNewUsername(e.target.value); setMsg(m => ({ ...m, username: '' })); }} />
-            {saveBtn('确认修改', changeUsername, busy === 'username')}
+            {saveBtn(t('settings.confirm'), changeUsername, busy === 'username')}
           </div>
           {msg.username && <span style={feedbackStyle(msg.username === '用户名已更新')}>{msg.username}</span>}
         </div>
 
         {/* Email */}
         <div style={rowStyle}>
-          <span style={labelStyle}>更改邮箱</span>
+          <span style={labelStyle}>{t('settings.email_section')}</span>
+          <p style={{ fontSize: '11px', color: '#9a8570', margin: 0 }}>{t('settings.email_current', { email: authUser?.email ?? '' })}</p>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <input style={inputStyle} type="email" placeholder="新邮箱地址" value={email} onChange={e => { setEmail(e.target.value); setMsg(m => ({ ...m, email: '' })); }} />
-            {saveBtn('发送确认', changeEmail, busy === 'email')}
+            <input style={inputStyle} type="email" placeholder={t('settings.email_placeholder')} value={email} onChange={e => { setEmail(e.target.value); setMsg(m => ({ ...m, email: '' })); }} />
+            {saveBtn(t('settings.confirm'), changeEmail, busy === 'email')}
           </div>
           {msg.email && <span style={feedbackStyle(!msg.email.startsWith('修改失败'))}>{msg.email}</span>}
         </div>
 
         {/* WeChat */}
         <div style={rowStyle}>
-          <span style={labelStyle}>微信号（仅好友可见）</span>
+          <span style={labelStyle}>{t('settings.wechat_section')}</span>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <input style={inputStyle} placeholder="你的微信号" value={wechat} onChange={e => { setWechat(e.target.value); setMsg(m => ({ ...m, wechat: '' })); }} />
-            {saveBtn('保存', saveWechat, busy === 'wechat')}
+            <input style={inputStyle} placeholder={t('settings.wechat_placeholder')} value={wechat} onChange={e => { setWechat(e.target.value); setMsg(m => ({ ...m, wechat: '' })); }} />
+            {saveBtn(t('settings.confirm'), saveWechat, busy === 'wechat')}
           </div>
-          {msg.wechat && <span style={feedbackStyle(true)}>{msg.wechat}</span>}
+          {msg.wechat && <span style={feedbackStyle(true)}>{t('settings.saved')}</span>}
         </div>
 
         {/* Public/Private */}
         <div style={rowStyle}>
-          <span style={labelStyle}>档案可见性</span>
+          <span style={labelStyle}>{t('settings.privacy_section')}</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <motion.div onClick={togglePublic} whileTap={{ scale: 0.95 }}
-              style={{ width: '38px', height: '22px', position: 'relative', cursor: 'pointer', backgroundColor: isPublic ? '#7d9b96' : 'rgba(200,184,154,0.5)', borderRadius: '11px', transition: 'background-color 0.2s', flexShrink: 0 }}>
+              style={{ width: '38px', height: '22px', position: 'relative', cursor: 'pointer', backgroundColor: isPublic ? 'var(--color-sage-dark)' : 'rgba(200,184,154,0.5)', borderRadius: '11px', transition: 'background-color 0.2s', flexShrink: 0 }}>
               <motion.div animate={{ left: isPublic ? '18px' : '3px' }} transition={{ type: 'spring', stiffness: 400, damping: 28 }}
                 style={{ position: 'absolute', top: '3px', width: '16px', height: '16px', backgroundColor: '#fff', borderRadius: '50%', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }} />
             </motion.div>
-            <span style={{ fontSize: '13px', color: '#6b5c45' }}>{isPublic ? '公开（可被搜索）' : '私密'}</span>
+            <span style={{ fontSize: '13px', color: '#6b5c45' }}>{isPublic ? t('settings.public') : t('settings.private')}</span>
           </div>
           {msg.privacy && <span style={feedbackStyle(true)}>{msg.privacy}</span>}
         </div>
 
         {/* Logout */}
         <div style={rowStyle}>
-          <span style={labelStyle}>账户</span>
+          <span style={labelStyle}>{t('settings.logout')}</span>
           <motion.button whileTap={{ scale: 0.97 }} onClick={logout}
             style={{ padding: '10px', background: 'rgba(44,48,37,0.07)', border: '1px solid rgba(200,184,154,0.4)', borderRadius: '8px', fontSize: '13px', color: '#6b5c45', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, textAlign: 'left' }}>
-            退出登录
+            {t('settings.logout')}
           </motion.button>
         </div>
 
         {/* Delete account */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <span style={labelStyle}>危险区域</span>
+          <span style={labelStyle}>{t('settings.delete')}</span>
           {deleteStep === 0 && (
             <motion.button whileTap={{ scale: 0.97 }} onClick={() => setDeleteStep(1)}
               style={{ padding: '10px', background: 'rgba(160,48,48,0.06)', border: '1px solid rgba(160,48,48,0.2)', borderRadius: '8px', fontSize: '13px', color: '#a03030', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, textAlign: 'left' }}>
-              删除账户
+              {t('settings.delete')}
             </motion.button>
           )}
           {deleteStep === 1 && (
             <div style={{ background: 'rgba(160,48,48,0.06)', border: '1px solid rgba(160,48,48,0.2)', borderRadius: '8px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <p style={{ fontSize: '13px', color: '#a03030', margin: 0, lineHeight: 1.6 }}>确认删除？此操作不可撤销，你的所有数据将被永久删除。</p>
+              <p style={{ fontSize: '13px', color: '#a03030', margin: 0, lineHeight: 1.6 }}>{t('settings.delete_confirm')}</p>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <motion.button whileTap={{ scale: 0.97 }} onClick={deleteAccount} disabled={busy === 'delete'}
                   style={{ flex: 1, padding: '8px', background: '#a03030', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: busy === 'delete' ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-                  {busy === 'delete' ? '删除中…' : '确认删除'}
+                  {busy === 'delete' ? '…' : t('settings.confirm')}
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.97 }} onClick={() => setDeleteStep(0)}
                   style={{ flex: 1, padding: '8px', background: 'transparent', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '8px', fontSize: '12px', color: '#9a8570', cursor: 'pointer', fontFamily: 'inherit' }}>
-                  取消
+                  {t('profile.cancel')}
                 </motion.button>
               </div>
               {msg.delete && <span style={feedbackStyle(false)}>{msg.delete}</span>}
@@ -312,6 +318,7 @@ function SettingsModal({ user, onClose, navigate }) {
 
 // ── Friends Modal ─────────────────────────────────────────────────────────────
 function FriendsModal({ friendIds, onClose, navigate }) {
+  const { lang, t } = useLanguage();
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -331,14 +338,14 @@ function FriendsModal({ friendIds, onClose, navigate }) {
         style={{ width: '100%', maxWidth: '380px', background: '#F2EDE4', borderRadius: '16px', padding: '28px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', margin: 0 }}>好友 · {friendIds.length}</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', margin: 0 }}>{t('profile.friends')} · {friendIds.length}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a8570', fontSize: '18px', lineHeight: 1, padding: '2px 6px' }}>×</button>
         </div>
 
         <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {loading && <p style={{ color: '#9a8570', fontSize: '13px', textAlign: 'center', padding: '24px' }}>加载中…</p>}
+          {loading && <p style={{ color: '#9a8570', fontSize: '13px', textAlign: 'center', padding: '24px' }}>…</p>}
           {!loading && friendIds.length === 0 && (
-            <p style={{ color: '#c8b89a', fontSize: '13px', textAlign: 'center', padding: '32px 0' }}>还没有好友</p>
+            <p style={{ color: '#c8b89a', fontSize: '13px', textAlign: 'center', padding: '32px 0' }}>{t('profile.no_history')}</p>
           )}
           {!loading && profiles.map(p => (
             <motion.div key={p.id} whileHover={{ x: 3 }} whileTap={{ scale: 0.98 }}
@@ -362,6 +369,7 @@ function FriendsModal({ friendIds, onClose, navigate }) {
 
 // ── Match Card ─────────────────────────────────────────────────────────────────
 function MatchCard({ s, index }) {
+  const { lang, t } = useLanguage();
   return (
     <Link to={`/report/${s.id}`} style={{ textDecoration: 'none' }}>
       <motion.div className="glass-card"
@@ -371,10 +379,10 @@ function MatchCard({ s, index }) {
         whileHover={{ y: -3, scale: 1.003, transition: spring }}
         whileTap={{ scale: 0.98 }}
       >
-        <div style={{ width: '4px', alignSelf: 'stretch', minHeight: '36px', backgroundColor: s.won === true ? '#5a8f7a' : s.won === false ? '#a03030' : '#c8b89a', borderRadius: '2px' }} />
+        <div style={{ width: '4px', alignSelf: 'stretch', minHeight: '36px', backgroundColor: s.won === true ? 'var(--color-success)' : s.won === false ? '#a03030' : '#c8b89a', borderRadius: '2px' }} />
         <div style={{ minWidth: 0 }}>
           <p style={{ fontSize: '14px', fontWeight: 600, color: '#2C3025', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>{s.motion}</p>
-          <p style={{ fontSize: '11px', color: '#9a8570' }}>{formatChineseDate(s.date)}{s.score ? ` · ${s.score}` : ''}</p>
+          <p style={{ fontSize: '11px', color: '#9a8570' }}>{s.date ? new Date(s.date).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : ''}{s.score ? ` · ${s.score}` : ''}</p>
         </div>
         <span style={{ fontSize: Number.isFinite(s.avg_score) ? '24px' : '14px', fontWeight: 800, color: Number.isFinite(s.avg_score) ? scoreColor(s.avg_score) : '#c8b89a', letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
           {Number.isFinite(s.avg_score) ? s.avg_score.toFixed(1) : 'N/A'}
@@ -390,6 +398,7 @@ export default function Profile({ self }) {
   const navigate = useNavigate();
   const { friends } = useFriend();
   const user = useUser();
+  const { lang, t } = useLanguage();
 
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState('');
@@ -487,14 +496,14 @@ export default function Profile({ self }) {
 
   if (!isSelf && loadingOther) return (
     <div style={{ maxWidth: '760px', margin: '60px auto', textAlign: 'center', padding: '24px' }}>
-      <p style={{ fontSize: '14px', color: '#9a8570' }}>加载中…</p>
+      <p style={{ fontSize: '14px', color: '#9a8570' }}>…</p>
     </div>
   );
 
   if (!isSelf && (otherNotFound || !profile)) return (
     <div style={{ maxWidth: '760px', margin: '60px auto', textAlign: 'center', padding: '24px' }}>
-      <p style={{ fontSize: '16px', color: '#9a8570' }}>找不到该辩手档案</p>
-      <button onClick={() => navigate(-1)} style={{ color: '#7d9b96', fontSize: '13px', display: 'block', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', margin: '8px auto 0' }}>← 返回</button>
+      <p style={{ fontSize: '16px', color: '#9a8570' }}>{t('profile.private')}</p>
+      <button onClick={() => navigate(-1)} style={{ color: '#7d9b96', fontSize: '13px', display: 'block', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', margin: '8px auto 0' }}>← {t('common.back')}</button>
     </div>
   );
 
@@ -538,7 +547,7 @@ export default function Profile({ self }) {
 
           {!isSelf && (
             <motion.div variants={item} style={{ marginBottom: '20px' }}>
-              <button onClick={() => navigate(-1)} style={{ fontSize: '12px', color: '#9a8570', letterSpacing: '0.06em', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>← 返回</button>
+              <button onClick={() => navigate(-1)} style={{ fontSize: '12px', color: '#9a8570', letterSpacing: '0.06em', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>← {t('common.back')}</button>
             </motion.div>
           )}
 
@@ -573,17 +582,17 @@ export default function Profile({ self }) {
                   {isFriendOfProfile && (
                     <Link to={`/chat/${id}`} style={{ textDecoration: 'none' }}>
                       <motion.button whileTap={{ scale: 0.97 }} style={ghostBtn}>
-                        私信
+                        {t('profile.send_msg')}
                       </motion.button>
                     </Link>
                   )}
                   {isSelf && !editing && (
                     <>
                       <motion.button onClick={startEditing} whileTap={{ scale: 0.97 }} style={ghostBtn}>
-                        编辑档案
+                        {t('profile.edit')}
                       </motion.button>
                       <motion.button onClick={() => setShowSettings(true)} whileTap={{ scale: 0.97 }}
-                        style={{ ...ghostBtn, padding: '8px 12px' }} title="设置">
+                        style={{ ...ghostBtn, padding: '8px 12px' }} title={t('profile.settings')}>
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                           <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
                         </svg>
@@ -594,11 +603,11 @@ export default function Profile({ self }) {
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <motion.button onClick={saveEditing} whileTap={{ scale: 0.97 }}
                         style={{ padding: '8px 18px', background: '#2C3025', border: 'none', borderRadius: '20px', fontSize: '12px', color: '#E8E4DC', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em' }}>
-                        保存
+                        {t('profile.save')}
                       </motion.button>
                       <motion.button onClick={cancelEditing} whileTap={{ scale: 0.97 }}
                         style={{ padding: '8px 14px', background: 'transparent', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '20px', fontSize: '12px', color: '#9a8570', cursor: 'pointer', fontFamily: 'inherit' }}>
-                        取消
+                        {t('profile.cancel')}
                       </motion.button>
                     </div>
                   )}
@@ -609,16 +618,16 @@ export default function Profile({ self }) {
               {editing ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>姓名</label>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>{t('profile.name')}</label>
                     <input style={inputStyle} value={draftName} onChange={e => setDraftName(e.target.value)} />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '10px' }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>主队（学校 / 俱乐部 / 机构）</label>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>{t('profile.team')}</label>
                       <TeamPicker style={inputStyle} value={draftTeam} onChange={setDraftTeam} placeholder="如：拔萃学院辩论学会" />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>地区</label>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>{t('profile.region')}</label>
                       <select value={draftRegion} onChange={e => setDraftRegion(e.target.value)}
                         style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}>
                         <option value="">请选择…</option>
@@ -629,7 +638,7 @@ export default function Profile({ self }) {
                     </div>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>个人简介</label>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>{t('profile.bio')}</label>
                     <textarea
                       style={{ ...inputStyle, resize: 'none', height: '88px', lineHeight: '1.6' }}
                       value={draftBio}
@@ -646,13 +655,13 @@ export default function Profile({ self }) {
                         }
                       }}
                     />
-                    <div style={{ fontSize: '11px', color: '#a4b9b5', textAlign: 'right', marginTop: '3px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--color-sage)', textAlign: 'right', marginTop: '3px' }}>
                       {[...draftBio].length}/100 · {draftBio.split('\n').length}/4行
                     </div>
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', letterSpacing: '0.06em' }}>荣誉（最多 5 项）</label>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', letterSpacing: '0.06em' }}>{t('profile.honors')}</label>
                       {draftHonors.length < 5 && (
                         <button type="button"
                           onClick={() => setDraftHonors(h => [...h, ''])}
@@ -676,7 +685,7 @@ export default function Profile({ self }) {
                       ))}
                     </div>
                   </div>
-                  <p style={{ fontSize: '11px', color: '#a4b9b5', margin: 0 }}>头像：点击头像图片上传 · 邮箱、微信、公开设置在「设置」中修改</p>
+                  <p style={{ fontSize: '11px', color: '#a4b9b5', margin: 0 }}>{t('profile.avatar_hint')}</p>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : ((isSelf || isFriendOfProfile) ? '1fr 260px' : '1fr'), gap: isMobile ? '18px' : '24px', alignItems: 'start' }}>
@@ -692,14 +701,14 @@ export default function Profile({ self }) {
                         <span style={{ color: 'rgba(200,184,154,0.5)', fontSize: '11px' }}>·</span>
                         <button onClick={() => isSelf && setShowFriends(true)}
                           style={{ fontSize: '12px', color: '#6b5c45', fontWeight: 500, background: 'none', border: 'none', padding: 0, cursor: isSelf ? 'pointer' : 'default', fontFamily: 'inherit', textDecoration: isSelf ? 'underline' : 'none', textDecorationColor: 'rgba(107,92,69,0.3)' }}>
-                          {friendCount} 好友
+                          {friendCount} {t('profile.friends')}
                         </button>
                         {isSelf && (
                           <>
                             <span style={{ color: 'rgba(200,184,154,0.5)', fontSize: '11px' }}>·</span>
-                            <span style={{ fontSize: '12px', color: '#6b5c45', fontWeight: 500 }}>{sessions.length} 场次</span>
+                            <span style={{ fontSize: '12px', color: '#6b5c45', fontWeight: 500 }}>{sessions.length} {t('profile.matches_unit')}</span>
                             <span style={{ color: 'rgba(200,184,154,0.5)', fontSize: '11px' }}>·</span>
-                            <span style={{ fontSize: '12px', color: winRate >= 60 ? '#5a8f7a' : '#6b5c45', fontWeight: 500 }}>胜率 {winRate}%</span>
+                            <span style={{ fontSize: '12px', color: winRate >= 60 ? 'var(--color-success)' : '#6b5c45', fontWeight: 500 }}>{t('profile.win_rate')} {winRate}%</span>
                           </>
                         )}
                       </div>
@@ -727,7 +736,7 @@ export default function Profile({ self }) {
                         {(isSelf || isFriendOfProfile) && profile.wechat && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9a8570" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                            <span style={{ fontSize: '12px', color: '#7d6b55', fontWeight: 500 }}>微信：{profile.wechat}</span>
+                            <span style={{ fontSize: '12px', color: '#7d6b55', fontWeight: 500 }}>{t('settings.wechat_section')}：{profile.wechat}</span>
                           </div>
                         )}
                       </div>
@@ -748,8 +757,8 @@ export default function Profile({ self }) {
 
                     {isSelf && (
                       <div style={{ paddingTop: '12px', borderTop: '1px solid rgba(200,184,154,0.3)' }}>
-                        <AnimatedNumber value={Number(profile.avg_score)} decimals={1} style={{ fontSize: '26px', fontWeight: 800, color: '#7d9b96', lineHeight: 1 }} />
-                        <span style={{ fontSize: '11px', color: '#9a8570', marginLeft: '4px' }}>综合均分</span>
+                        <AnimatedNumber value={Number(profile.avg_score)} decimals={1} style={{ fontSize: '26px', fontWeight: 800, color: 'var(--color-sage-dark)', lineHeight: 1 }} />
+                        <span style={{ fontSize: '11px', color: '#9a8570', marginLeft: '4px' }}>{t('profile.avg_score')}</span>
                       </div>
                     )}
                   </div>
@@ -762,7 +771,7 @@ export default function Profile({ self }) {
                           <PolarGrid stroke="rgba(164,185,181,0.3)" />
                           <PolarAngleAxis dataKey="subject" tick={{ fill: '#6b5c45', fontSize: 11, fontFamily: 'inherit' }} />
                           <PolarRadiusAxis domain={[0, 10]} tick={false} axisLine={false} />
-                          <Radar dataKey="score" stroke="#7d9b96" fill="#a4b9b5" fillOpacity={0.28} strokeWidth={1.5} />
+                          <Radar dataKey="score" stroke="var(--color-sage-dark)" fill="var(--color-sage)" fillOpacity={0.28} strokeWidth={1.5} />
                         </RadarChart>
                       </ResponsiveContainer>
                     </div>
@@ -796,7 +805,7 @@ export default function Profile({ self }) {
               </Link>
             </div>
 
-            <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.12em', marginBottom: '14px' }}>比赛记录</p>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.12em', marginBottom: '14px' }}>{t('profile.history')}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {sessions.map((s, i) => (
                 <MatchCard key={s.id} s={s} index={i} />
