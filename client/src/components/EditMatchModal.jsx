@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useUser } from '../contexts/UserContext';
 import { useFriend } from '../contexts/FriendContext';
 import { sendMatchInvites } from '../lib/utils';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function DebaterSearch({ value, onChange, placeholder, selfUser, inputStyle }) {
   const [focused, setFocused] = useState(false);
@@ -70,6 +71,7 @@ const overlayStyle = {
 };
 
 export default function EditMatchModal({ session, onClose, onSaved }) {
+  const { t } = useLanguage();
   const { id: selfId, name: selfName, username: selfUsername, team: selfTeam } = useUser();
   const selfUser = { id: selfId, name: selfName, username: selfUsername, team: selfTeam };
   const [form, setForm] = useState({
@@ -111,7 +113,7 @@ export default function EditMatchModal({ session, onClose, onSaved }) {
     };
     const { error } = await supabase.from('sessions').update(patch).eq('id', session.id);
     setSaving(false);
-    if (error) { setError('保存失败，请重试'); return; }
+    if (error) { setError(t('record.error')); return; }
     // Newly @-tagged debaters should get a match invite, same as the upload flow
     if (selfId) await sendMatchInvites(supabase, session.id, form.debaters, selfId, selfUsername);
     onSaved(patch);
@@ -124,41 +126,41 @@ export default function EditMatchModal({ session, onClose, onSaved }) {
         style={{ width: '100%', maxWidth: '460px', background: '#F2EDE4', borderRadius: '16px', padding: '28px', maxHeight: '86vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', margin: 0 }}>编辑比赛记录</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', margin: 0 }}>{t('record.title_edit')}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9a8570', fontSize: '18px', lineHeight: 1, padding: '2px 6px' }}>×</button>
         </div>
 
         <div>
-          <label style={labelStyle}>赛事名称</label>
+          <label style={labelStyle}>{t('record.tournament')}</label>
           <input style={inputStyle} value={form.tournament} onChange={e => setForm(f => ({ ...f, tournament: e.target.value }))} />
         </div>
         <div>
-          <label style={labelStyle}>辩题</label>
+          <label style={labelStyle}>{t('record.motion')}</label>
           <input style={inputStyle} value={form.motion} onChange={e => setForm(f => ({ ...f, motion: e.target.value }))} />
         </div>
         <div>
-          <label style={labelStyle}>持方</label>
+          <label style={labelStyle}>{t('record.side')}</label>
           <div style={{ display: 'flex', gap: '8px' }}>
-            {['正方', '反方'].map(opt => (
-              <button key={opt} type="button" onClick={() => setForm(f => ({ ...f, side: opt }))}
-                style={{ flex: 1, padding: '8px', borderRadius: '8px', border: `1px solid ${form.side === opt ? '#a4b9b5' : 'rgba(200,184,154,0.5)'}`, background: form.side === opt ? 'rgba(164,185,181,0.15)' : 'transparent', color: '#2C3025', fontSize: '13px', fontWeight: form.side === opt ? 700 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
-                {opt}
+            {[{ val: '正方', label: t('record.pro') }, { val: '反方', label: t('record.con') }].map(({ val, label: optLabel }) => (
+              <button key={val} type="button" onClick={() => setForm(f => ({ ...f, side: val }))}
+                style={{ flex: 1, padding: '8px', borderRadius: '8px', border: `1px solid ${form.side === val ? '#a4b9b5' : 'rgba(200,184,154,0.5)'}`, background: form.side === val ? 'rgba(164,185,181,0.15)' : 'transparent', color: '#2C3025', fontSize: '13px', fontWeight: form.side === val ? 700 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
+                {optLabel}
               </button>
             ))}
           </div>
         </div>
         <div>
-          <label style={labelStyle}>比分</label>
+          <label style={labelStyle}>{t('record.score')}</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <input type="number" min="0" max="99" style={{ ...inputStyle, textAlign: 'center' }} value={form.proScore} onChange={e => setForm(f => ({ ...f, proScore: e.target.value }))} placeholder="正方" />
+            <input type="number" min="0" max="99" style={{ ...inputStyle, textAlign: 'center' }} value={form.proScore} onChange={e => setForm(f => ({ ...f, proScore: e.target.value }))} placeholder={t('record.pro')} />
             <span style={{ color: '#c8b89a' }}>–</span>
-            <input type="number" min="0" max="99" style={{ ...inputStyle, textAlign: 'center' }} value={form.conScore} onChange={e => setForm(f => ({ ...f, conScore: e.target.value }))} placeholder="反方" />
+            <input type="number" min="0" max="99" style={{ ...inputStyle, textAlign: 'center' }} value={form.conScore} onChange={e => setForm(f => ({ ...f, conScore: e.target.value }))} placeholder={t('record.con')} />
           </div>
         </div>
         <div>
-          <label style={labelStyle}>上场辩手（输入用户名查找已注册的撇捺用户）</label>
+          <label style={labelStyle}>{t('record.debaters_label')}</label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {['一辩', '二辩', '三辩', '四辩'].map((pos, i) => (
+            {[t('lb.pos1'), t('lb.pos2'), t('lb.pos3'), t('lb.pos4')].map((pos, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ flex: 1 }}>
                   <DebaterSearch
@@ -185,7 +187,7 @@ export default function EditMatchModal({ session, onClose, onSaved }) {
           </div>
         </div>
         <div>
-          <label style={labelStyle}>备注</label>
+          <label style={labelStyle}>{t('record.notes')}</label>
           <textarea style={{ ...inputStyle, resize: 'none', height: '64px', lineHeight: 1.6 }} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
         </div>
 
@@ -198,11 +200,11 @@ export default function EditMatchModal({ session, onClose, onSaved }) {
         <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
           <motion.button whileTap={{ scale: 0.97 }} onClick={save} disabled={saving}
             style={{ flex: 1, padding: '11px', background: saving ? '#9a8570' : '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-            {saving ? '保存中…' : '保存'}
+            {saving ? t('record.saving') : t('common.save')}
           </motion.button>
           <motion.button whileTap={{ scale: 0.97 }} onClick={onClose}
             style={{ padding: '11px 18px', background: 'transparent', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '10px', fontSize: '13px', color: '#9a8570', cursor: 'pointer', fontFamily: 'inherit' }}>
-            取消
+            {t('common.cancel')}
           </motion.button>
         </div>
       </motion.div>

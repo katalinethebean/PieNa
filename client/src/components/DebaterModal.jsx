@@ -4,10 +4,12 @@ import { motion } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { useFriend } from '../contexts/FriendContext';
 import { supabase } from '../lib/supabase';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // 发现辩手：按姓名/用户名搜索并加好友。桌面「发现更多辩手」和手机顶栏
 // 的「发现好友」入口共用同一个弹窗。
 export default function DebaterModal({ onClose }) {
+  const { t } = useLanguage();
   const [q, setQ] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -60,8 +62,8 @@ export default function DebaterModal({ onClose }) {
         <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid rgba(200,184,154,0.3)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <div>
-              <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', marginBottom: '2px' }}>发现辩手</h2>
-              <p style={{ fontSize: '11px', color: '#7d6b55' }}>公开账号可按姓名搜索，私密账号仅限用户名</p>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', marginBottom: '2px' }}>{t('debater.title')}</h2>
+              <p style={{ fontSize: '11px', color: '#7d6b55' }}>{t('debater.subtitle')}</p>
             </div>
             <button onClick={onClose} style={{ background: 'rgba(200,184,154,0.3)', border: '1px solid rgba(200,184,154,0.4)', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', fontSize: '13px', color: '#5a4a3a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
           </div>
@@ -72,7 +74,7 @@ export default function DebaterModal({ onClose }) {
             <input
               autoFocus
               value={q} onChange={e => setQ(e.target.value)}
-              placeholder="搜索姓名、用户名…"
+              placeholder={t('debater.placeholder')}
               style={{ width: '100%', padding: '9px 12px 9px 32px', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '8px', fontSize: '13px', color: '#2C3025', background: 'rgba(255,255,255,0.65)', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
@@ -80,13 +82,13 @@ export default function DebaterModal({ onClose }) {
 
         <div style={{ overflowY: 'auto', flex: 1, padding: '4px 0' }}>
           {loading && (
-            <p style={{ textAlign: 'center', fontSize: '12px', color: '#9a8570', padding: '24px 0' }}>搜索中…</p>
+            <p style={{ textAlign: 'center', fontSize: '12px', color: '#9a8570', padding: '24px 0' }}>{t('debater.searching')}</p>
           )}
           {!loading && q && results.length === 0 && (
-            <p style={{ textAlign: 'center', fontSize: '13px', color: '#7d6b55', padding: '32px 0' }}>未找到匹配的辩手</p>
+            <p style={{ textAlign: 'center', fontSize: '13px', color: '#7d6b55', padding: '32px 0' }}>{t('debater.not_found')}</p>
           )}
           {!loading && !q && (
-            <p style={{ textAlign: 'center', fontSize: '12px', color: '#9a8570', padding: '32px 0', lineHeight: 1.7 }}>输入姓名或用户名开始搜索</p>
+            <p style={{ textAlign: 'center', fontSize: '12px', color: '#9a8570', padding: '32px 0', lineHeight: 1.7 }}>{t('debater.prompt')}</p>
           )}
           {results.map(d => {
             const st = statusOf(d.id);
@@ -104,25 +106,25 @@ export default function DebaterModal({ onClose }) {
                   <Link to={`/profile/${d.id}`} onClick={onClose} style={{ textDecoration: 'none' }}>
                     <p style={{ fontSize: '14px', fontWeight: 600, color: isPrivate ? '#7d6b55' : '#2C3025', marginBottom: '1px' }}>
                       {displayName}
-                      {isPrivate && <span style={{ fontSize: '10px', color: '#9a8570', marginLeft: '5px', fontWeight: 400 }}>私密</span>}
+                      {isPrivate && <span style={{ fontSize: '10px', color: '#9a8570', marginLeft: '5px', fontWeight: 400 }}>{t('debater.private_badge')}</span>}
                     </p>
                   </Link>
                   <p style={{ fontSize: '10px', color: '#8a7560' }}>@{d.username}{!isPrivate && d.school ? ` · ${d.school}` : ''}</p>
                 </div>
                 <div style={{ flexShrink: 0 }}>
-                  {st === 'friend' && <span style={{ fontSize: '11px', color: '#5a8f7a', background: 'rgba(90,143,122,0.1)', border: '1px solid rgba(90,143,122,0.25)', padding: '4px 10px', borderRadius: '20px' }}>✓ 好友</span>}
-                  {st === 'sent' && <button onClick={() => cancelRequest(d.id)} style={{ fontSize: '11px', color: '#7d6b55', background: 'rgba(200,184,154,0.25)', border: '1px solid rgba(200,184,154,0.4)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>已发送</button>}
-                  {st === 'received' && <button onClick={() => acceptRequest(d.id)} style={{ fontSize: '11px', color: '#c07a3a', background: 'rgba(192,122,58,0.1)', border: '1px solid rgba(192,122,58,0.25)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>接受</button>}
-                  {st === 'none' && greetingFor !== d.id && <button onClick={() => { setGreetingFor(d.id); setGreetingDraft(''); }} style={{ fontSize: '11px', color: '#3a6b5c', background: 'rgba(90,143,122,0.1)', border: '1px solid rgba(90,143,122,0.25)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>+ 加好友</button>}
+                  {st === 'friend' && <span style={{ fontSize: '11px', color: '#5a8f7a', background: 'rgba(90,143,122,0.1)', border: '1px solid rgba(90,143,122,0.25)', padding: '4px 10px', borderRadius: '20px' }}>{t('debater.is_friend')}</span>}
+                  {st === 'sent' && <button onClick={() => cancelRequest(d.id)} style={{ fontSize: '11px', color: '#7d6b55', background: 'rgba(200,184,154,0.25)', border: '1px solid rgba(200,184,154,0.4)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>{t('debater.sent')}</button>}
+                  {st === 'received' && <button onClick={() => acceptRequest(d.id)} style={{ fontSize: '11px', color: '#c07a3a', background: 'rgba(192,122,58,0.1)', border: '1px solid rgba(192,122,58,0.25)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>{t('notif.accept')}</button>}
+                  {st === 'none' && greetingFor !== d.id && <button onClick={() => { setGreetingFor(d.id); setGreetingDraft(''); }} style={{ fontSize: '11px', color: '#3a6b5c', background: 'rgba(90,143,122,0.1)', border: '1px solid rgba(90,143,122,0.25)', padding: '4px 10px', borderRadius: '20px', cursor: 'pointer', fontFamily: 'inherit' }}>{t('discover.add_friend')}</button>}
                   {st === 'none' && greetingFor === d.id && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', minWidth: '160px' }}>
                       <input autoFocus value={greetingDraft} onChange={e => setGreetingDraft(e.target.value.slice(0, 20))}
-                        placeholder="打个招呼（可选）" maxLength={20}
+                        placeholder={t('discover.say_hi')} maxLength={20}
                         onKeyDown={e => { if (e.key === 'Enter') { sendRequest(d.id, greetingDraft); setGreetingFor(null); } if (e.key === 'Escape') setGreetingFor(null); }}
                         style={{ padding: '5px 8px', border: '1px solid rgba(90,143,122,0.4)', borderRadius: '6px', fontSize: '11px', outline: 'none', fontFamily: 'inherit', background: 'rgba(255,255,255,0.7)', color: '#2C3025' }} />
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <button onClick={() => { sendRequest(d.id, greetingDraft); setGreetingFor(null); }} style={{ flex: 1, padding: '4px', fontSize: '10px', fontWeight: 600, background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>发送</button>
-                        <button onClick={() => setGreetingFor(null)} style={{ padding: '4px 6px', fontSize: '10px', background: 'transparent', color: '#9a8570', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>取消</button>
+                        <button onClick={() => { sendRequest(d.id, greetingDraft); setGreetingFor(null); }} style={{ flex: 1, padding: '4px', fontSize: '10px', fontWeight: 600, background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>{t('common.send')}</button>
+                        <button onClick={() => setGreetingFor(null)} style={{ padding: '4px 6px', fontSize: '10px', background: 'transparent', color: '#9a8570', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>{t('common.cancel')}</button>
                       </div>
                     </div>
                   )}

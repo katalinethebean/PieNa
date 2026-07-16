@@ -2,21 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, isConfigured } from '../lib/supabase';
 import { useIsMobile, MOBILE_FULL_HEIGHT } from '../lib/useIsMobile';
-
-const BOARDS = [
-  { key: '1', label: '一辩榜' },
-  { key: '2', label: '二辩榜' },
-  { key: '3', label: '三辩榜' },
-  { key: '4', label: '四辩榜' },
-  { key: 'overall', label: '全能榜' },
-];
+import { useLanguage } from '../contexts/LanguageContext';
 
 function formatRank(rank) {
   if (rank == null) return '-';
   return rank > 50 ? '50+' : rank;
 }
 
-function Column({ label, rows, self, isLast }) {
+function Column({ label, rows, self, isLast, t }) {
   const selfRank = self?.rank;
   const selfPoints = self?.points ?? 0;
 
@@ -31,7 +24,7 @@ function Column({ label, rows, self, isLast }) {
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {rows.length === 0 ? (
-          <p style={{ fontSize: '12px', color: '#9a8570', textAlign: 'center', padding: '32px 12px' }}>暂无排名数据</p>
+          <p style={{ fontSize: '12px', color: '#9a8570', textAlign: 'center', padding: '32px 12px' }}>{t('lb.no_data')}</p>
         ) : (
           rows.map((r, i) => (
             <Link key={r.id} to={`/profile/${r.id}`} style={{ textDecoration: 'none' }}>
@@ -57,7 +50,7 @@ function Column({ label, rows, self, isLast }) {
 
       <div style={{ padding: '10px 16px', borderTop: '1px solid rgba(200,184,154,0.5)', background: 'rgba(217,205,181,0.2)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
         <span style={{ fontSize: '12px', fontWeight: 700, color: '#c07a3a', flexShrink: 0, minWidth: '18px' }}>{formatRank(selfRank)}</span>
-        <span style={{ fontSize: '12px', fontWeight: 600, color: '#2C3025', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{self?.name || '我'}</span>
+        <span style={{ fontSize: '12px', fontWeight: 600, color: '#2C3025', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{self?.name || t('lb.my_stats')}</span>
         <span style={{ fontSize: '13px', fontWeight: 700, color: '#2C3025', flexShrink: 0 }}>{selfPoints}</span>
       </div>
     </div>
@@ -65,6 +58,14 @@ function Column({ label, rows, self, isLast }) {
 }
 
 export default function Leaderboard() {
+  const { t } = useLanguage();
+  const BOARDS = [
+    { key: '1', label: `${t('lb.pos1')}榜` },
+    { key: '2', label: `${t('lb.pos2')}榜` },
+    { key: '3', label: `${t('lb.pos3')}榜` },
+    { key: '4', label: `${t('lb.pos4')}榜` },
+    { key: 'overall', label: `${t('lb.overall')}榜` },
+  ];
   const [boards, setBoards] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -74,14 +75,14 @@ export default function Leaderboard() {
   useEffect(() => {
     if (!isConfigured) { setLoading(false); return; }
     supabase.rpc('get_leaderboards').then(({ data, error: rpcError }) => {
-      if (rpcError) { setError('排行榜加载失败，请稍后重试'); setLoading(false); return; }
+      if (rpcError) { setError(t('common.error')); setLoading(false); return; }
       setBoards(data || {});
       setLoading(false);
     });
   }, []);
 
   if (loading) {
-    return <p style={{ fontSize: '13px', color: '#9a8570', textAlign: 'center', padding: '80px 0' }}>加载中…</p>;
+    return <p style={{ fontSize: '13px', color: '#9a8570', textAlign: 'center', padding: '80px 0' }}>{t('lb.loading')}</p>;
   }
   if (error) {
     return <p style={{ fontSize: '13px', color: '#a03030', textAlign: 'center', padding: '80px 0' }}>{error}</p>;
@@ -119,6 +120,7 @@ export default function Leaderboard() {
           label={b.label}
           rows={boards?.[b.key] || []}
           self={boards?.self ? { name: boards.self.name, ...boards.self[b.key] } : null}
+          t={t}
           isLast
         />
       </div>
@@ -133,6 +135,8 @@ export default function Leaderboard() {
           label={b.label}
           rows={boards?.[b.key] || []}
           self={boards?.self ? { name: boards.self.name, ...boards.self[b.key] } : null}
+          t={t}
+          t={t}
           isLast={i === BOARDS.length - 1}
         />
       ))}

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { supabase, isConfigured } from '../lib/supabase';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Fire this event (e.g. from the navbar "?" button) to replay the tutorial.
 export const OPEN_ONBOARDING_EVENT = 'open-onboarding';
@@ -68,6 +69,7 @@ const FEATURES = [
 ];
 
 export default function OnboardingModal() {
+  const { t } = useLanguage();
   const user = useUser();
   const fileInputRef = useRef(null);
 
@@ -119,7 +121,7 @@ export default function OnboardingModal() {
   }
 
   async function handleSave() {
-    if (!name.trim()) { setError('请输入你的昵称'); return; }
+    if (!name.trim()) { setError(t('onboard.name_required')); return; }
     setSaving(true);
     setError('');
 
@@ -224,7 +226,7 @@ export default function OnboardingModal() {
             >
               <div>
                 <h1 style={{ fontSize: '30px', fontWeight: 900, color: '#2C3025', letterSpacing: '0.14em', marginBottom: '10px' }}>
-                  欢迎来到撇捺！
+                  {t('onboard.welcome')}
                 </h1>
                 <div style={{ width: '32px', height: '2px', background: '#a4b9b5', margin: '0 auto' }} />
               </div>
@@ -391,7 +393,7 @@ export default function OnboardingModal() {
                 cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
               }}
             >
-              上一步
+              {t('onboard.back')}
             </motion.button>
           )}
           {step < lastStep ? (
@@ -404,7 +406,7 @@ export default function OnboardingModal() {
                 fontFamily: 'inherit', letterSpacing: '0.1em',
               }}
             >
-              {step === 0 ? '开始了解' : '下一步'}
+              {step === 0 ? t('onboard.begin') : t('onboard.next')}
             </motion.button>
           ) : firstTime ? (
             <motion.button
@@ -417,7 +419,7 @@ export default function OnboardingModal() {
                 fontFamily: 'inherit', letterSpacing: '0.1em',
               }}
             >
-              {saving ? '保存中…' : '完成，进入撇捺'}
+              {saving ? t('onboard.saving') : t('onboard.finish')}
             </motion.button>
           ) : (
             <motion.button
@@ -429,7 +431,7 @@ export default function OnboardingModal() {
                 fontFamily: 'inherit', letterSpacing: '0.1em',
               }}
             >
-              完成
+              {t('onboard.finish_replay')}
             </motion.button>
           )}
         </div>
@@ -444,7 +446,7 @@ export default function OnboardingModal() {
               marginTop: '-8px',
             }}
           >
-            跳过介绍，直接完善档案
+            {t('onboard.skip_to_profile')}
           </button>
         )}
       </motion.div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { supabase, isConfigured } from '../lib/supabase';
+// TeamPicker receives placeholder and all UI text as props — no hardcoded i18n needed here.
 
 // Combobox for 主队: pick an existing team or type a new one (created on save).
 export default function TeamPicker({ value, onChange, style, placeholder }) {

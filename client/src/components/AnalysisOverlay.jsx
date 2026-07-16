@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useReviewJob } from '../contexts/ReviewJobContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const btnBase = {
   padding: '9px 16px', borderRadius: '8px', fontSize: '13px',
@@ -14,6 +15,7 @@ const btnBase = {
 // 挂在 App 层：当前查看的任务在运行时铺满全屏；
 // 收起后转为右上角悬浮卡片（ReviewJobWidget）。
 export default function AnalysisOverlay() {
+  const { t } = useLanguage();
   const { jobs, activeJobId, setActiveJobId, removeJob } = useReviewJob();
   const navigate = useNavigate();
 
@@ -70,7 +72,7 @@ export default function AnalysisOverlay() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
                 </svg>
-                取消
+                {t('common.cancel')}
               </button>
               {!matchError && (
                 <button onClick={handleMinimize} style={{ ...btnBase, background: 'rgba(255,255,255,0.5)', color: '#6b5c45' }}>
@@ -78,7 +80,7 @@ export default function AnalysisOverlay() {
                     <polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/>
                     <line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/>
                   </svg>
-                  收起
+                  {t('overlay.minimize')}
                 </button>
               )}
             </div>
@@ -86,10 +88,10 @@ export default function AnalysisOverlay() {
             {matchError ? (
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                 className="glass-card" style={{ padding: '40px 32px', textAlign: 'center' }}>
-                <p style={{ fontSize: '15px', fontWeight: 700, color: '#a03030', marginBottom: '8px' }}>分析失败</p>
+                <p style={{ fontSize: '15px', fontWeight: 700, color: '#a03030', marginBottom: '8px' }}>{t('job.failed')}</p>
                 <p style={{ fontSize: '13px', color: '#6b5c45', marginBottom: '24px' }}>{job.error}</p>
                 <button onClick={handleCancel} style={{ ...btnBase, display: 'inline-flex', background: 'rgba(90,143,122,0.1)', color: '#5a8f7a', borderColor: 'rgba(90,143,122,0.35)' }}>
-                  返回重试
+                  {t('overlay.retry')}
                 </button>
               </motion.div>
             ) : (
@@ -99,7 +101,7 @@ export default function AnalysisOverlay() {
                 className="glass-card" style={{ padding: '48px 36px', textAlign: 'center' }}
               >
                 <p style={{ fontSize: '13px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '6px' }}>
-                  {job.kind === 'match' ? '比赛分析中' : '复盘分析中'}
+                  {job.kind === 'match' ? t('job.match_running') : t('job.review_running')}
                 </p>
                 <p style={{ fontSize: '15px', fontWeight: 700, color: '#2C3025', marginBottom: '36px' }}>
                   {job.meta?.motion} · {job.meta?.position}
@@ -108,7 +110,7 @@ export default function AnalysisOverlay() {
                 {/* 滑轨进度条 */}
                 <div style={{ maxWidth: '440px', margin: '0 auto 12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '12px', color: '#9a8570' }}>{matchSaving ? '保存比赛记录…' : job.stage}</span>
+                    <span style={{ fontSize: '12px', color: '#9a8570' }}>{matchSaving ? t('overlay.saving_match') : job.stage}</span>
                     <span style={{ fontSize: '20px', fontWeight: 800, color: '#5a8f7a', fontVariantNumeric: 'tabular-nums' }}>
                       {job.progress}%
                     </span>
@@ -136,7 +138,7 @@ export default function AnalysisOverlay() {
                 </div>
 
                 <p style={{ fontSize: '12px', color: '#9a8570', marginTop: '28px' }}>
-                  分析大约需要一两分钟，收起后可以先去逛逛，完成时会在右上角提醒你。
+                  {t('overlay.hint')}
                 </p>
               </motion.div>
             )}

@@ -225,4 +225,60 @@ export default {
   'notif.empty': 'No notifications',
   'notif.friend_request': '{name} sent you a friend request',
   'notif.match_invite': '{name} invited you to view a match record',
+  'notif.friend_requests': 'Friend Requests',
+  'notif.friend_request_sub': 'sent you a friend request',
+  'notif.like_section': 'Post Likes',
+  'notif.liked_post': '{name} liked your post',
+  'notif.mark_read': 'Mark as read',
+  'notif.invite_section': 'Match Invitations',
+  'notif.match_recorded': '{name} recorded a match',
+  'notif.match_add_prompt': 'Add this match to your records?',
+  'notif.match_add': 'Add to My Records',
+  'notif.match_decline': 'Decline',
+  'notif.accept': 'Accept',
+  'notif.decline': 'Decline',
+
+  // review job widget / analysis overlay
+  'job.done': '✓ Analysis Done',
+  'job.failed': 'Analysis Failed',
+  'job.match_running': 'Analyzing Match',
+  'job.review_running': 'Analyzing Review',
+  'job.click_view': 'Click to view results',
+  'overlay.minimize': 'Minimize',
+  'overlay.retry': 'Go Back',
+  'overlay.saving_match': 'Saving match…',
+  'overlay.hint': 'Analysis takes about a minute or two. You can minimize and browse around — we\'ll notify you in the top right when it\'s done.',
+
+  // edit match modal
+  'record.title_edit': 'Edit Match Record',
+  'record.side': 'Side',
+  'record.score': 'Score',
+  'record.debaters_label': 'Debaters (enter username to find registered users)',
+  'record.pro': 'Prop', 'record.con': 'Opp',
+
+  // debater modal
+  'debater.title': 'Find Debaters',
+  'debater.subtitle': 'Public accounts can be found by name; private accounts by username only',
+  'debater.placeholder': 'Search name or username…',
+  'debater.searching': 'Searching…',
+  'debater.not_found': 'No debaters found',
+  'debater.prompt': 'Enter a name or username to search',
+  'debater.private_badge': 'Private',
+  'debater.is_friend': '✓ Friends',
+  'debater.sent': 'Sent',
+
+  // login prompt modal
+  'login_prompt.title': 'Log in to unlock all features',
+  'login_prompt.desc': 'Create a PieNa account to contact posters, post recruitments, and track your matches',
+  'login_prompt.browse': 'Just browsing',
+
+  // onboarding extra
+  'onboard.welcome': 'Welcome to PieNa!',
+  'onboard.begin': 'Get Started',
+  'onboard.back': 'Back',
+  'onboard.finish': 'Finish & Enter PieNa',
+  'onboard.finish_replay': 'Done',
+  'onboard.saving': 'Saving…',
+  'onboard.skip_to_profile': 'Skip intro, go to profile',
+  'onboard.name_required': 'Please enter your display name',
 };

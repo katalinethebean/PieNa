@@ -225,4 +225,60 @@ export default {
   'notif.empty': '暂无通知',
   'notif.friend_request': '{name} 向你发送了好友申请',
   'notif.match_invite': '{name} 邀请你查看比赛记录',
+  'notif.friend_requests': '好友请求',
+  'notif.friend_request_sub': '请求加您为好友',
+  'notif.like_section': '招募点赞',
+  'notif.liked_post': '{name} 赞了你的招募',
+  'notif.mark_read': '标为已读',
+  'notif.invite_section': '比赛记录邀请',
+  'notif.match_recorded': '{name} 记录了一场比赛',
+  'notif.match_add_prompt': '要把这场比赛也记录到你的档案吗？',
+  'notif.match_add': '加入我的记录',
+  'notif.match_decline': '不需要',
+  'notif.accept': '接受',
+  'notif.decline': '拒绝',
+
+  // review job widget / analysis overlay
+  'job.done': '✓ 分析完成',
+  'job.failed': '分析失败',
+  'job.match_running': '比赛分析中',
+  'job.review_running': '复盘分析中',
+  'job.click_view': '点击查看结果',
+  'overlay.minimize': '收起',
+  'overlay.retry': '返回重试',
+  'overlay.saving_match': '保存比赛记录…',
+  'overlay.hint': '分析大约需要一两分钟，收起后可以先去逛逛，完成时会在右上角提醒你。',
+
+  // edit match modal
+  'record.title_edit': '编辑比赛记录',
+  'record.side': '持方',
+  'record.score': '比分',
+  'record.debaters_label': '上场辩手（输入用户名查找已注册的撇捺用户）',
+  'record.pro': '正方', 'record.con': '反方',
+
+  // debater modal
+  'debater.title': '发现辩手',
+  'debater.subtitle': '公开账号可按姓名搜索，私密账号仅限用户名',
+  'debater.placeholder': '搜索姓名、用户名…',
+  'debater.searching': '搜索中…',
+  'debater.not_found': '未找到匹配的辩手',
+  'debater.prompt': '输入姓名或用户名开始搜索',
+  'debater.private_badge': '私密',
+  'debater.is_friend': '✓ 好友',
+  'debater.sent': '已发送',
+
+  // login prompt modal
+  'login_prompt.title': '登录后解锁完整功能',
+  'login_prompt.desc': '注册撇捺账号，即可联系发帖人、发布招募、记录并复盘你的比赛',
+  'login_prompt.browse': '先随便逛逛',
+
+  // onboarding extra
+  'onboard.welcome': '欢迎来到撇捺！',
+  'onboard.begin': '开始了解',
+  'onboard.back': '上一步',
+  'onboard.finish': '完成，进入撇捺',
+  'onboard.finish_replay': '完成',
+  'onboard.saving': '保存中…',
+  'onboard.skip_to_profile': '跳过介绍，直接完善档案',
+  'onboard.name_required': '请输入你的昵称',
 };

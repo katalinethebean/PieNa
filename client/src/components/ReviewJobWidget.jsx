@@ -1,10 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useReviewJob } from '../contexts/ReviewJobContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // 右上角悬浮的复盘分析进度卡片，支持多个任务并行（纵向堆叠）。
 // 当前正在 /review 页全屏查看的任务不显示卡片。
 export default function ReviewJobWidget() {
+  const { t } = useLanguage();
   const { jobs, activeJobId, setActiveJobId, removeJob } = useReviewJob();
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,7 +62,7 @@ export default function ReviewJobWidget() {
                       animation: 'reviewJobPulse 1.2s ease-in-out infinite', flexShrink: 0,
                     }} />
                   )}
-                  {done ? '✓ 分析完成' : failed ? '分析失败' : job.kind === 'match' ? '比赛分析中' : '复盘分析中'}
+                  {done ? t('job.done') : failed ? t('job.failed') : job.kind === 'match' ? t('job.match_running') : t('job.review_running')}
                 </span>
                 {(done || failed) && (
                   <button
@@ -92,7 +94,7 @@ export default function ReviewJobWidget() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <span style={{ fontSize: '10px', color: '#9a8570', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '170px' }}>
-                      {done ? '点击查看结果' : job.stage}
+                      {done ? t('job.click_view') : job.stage}
                     </span>
                     <span style={{ fontSize: '11px', fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>
                       {job.progress}%

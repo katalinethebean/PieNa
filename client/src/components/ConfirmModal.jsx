@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const overlayStyle = {
   position: 'fixed', inset: 0, backgroundColor: 'rgba(44,48,37,0.5)',
@@ -6,7 +7,10 @@ const overlayStyle = {
   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
 };
 
-export default function ConfirmModal({ title, message, confirmLabel = '确认', cancelLabel = '取消', danger = false, onConfirm, onCancel }) {
+export default function ConfirmModal({ title, message, confirmLabel, cancelLabel, danger = false, onConfirm, onCancel }) {
+  const { t } = useLanguage();
+  const resolvedConfirm = confirmLabel ?? t('common.confirm');
+  const resolvedCancel = cancelLabel ?? t('common.cancel');
   return (
     <div style={overlayStyle} onClick={e => e.target === e.currentTarget && onCancel()}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
@@ -19,11 +23,11 @@ export default function ConfirmModal({ title, message, confirmLabel = '确认', 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
           <motion.button whileTap={{ scale: 0.96 }} onClick={onCancel}
             style={{ padding: '8px 16px', background: 'rgba(200,184,154,0.25)', color: '#6b5c45', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-            {cancelLabel}
+            {resolvedCancel}
           </motion.button>
           <motion.button whileTap={{ scale: 0.96 }} onClick={onConfirm}
             style={{ padding: '8px 16px', background: danger ? '#a03030' : '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-            {confirmLabel}
+            {resolvedConfirm}
           </motion.button>
         </div>
       </motion.div>

@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // 访客点击需要登录的功能时弹出的提示框
 export default function LoginPromptModal({ onClose }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <motion.div
@@ -21,22 +23,22 @@ export default function LoginPromptModal({ onClose }) {
         onClick={e => e.stopPropagation()}
       >
         <div style={{ fontSize: '32px', marginBottom: '14px' }}>👋</div>
-        <p style={{ fontSize: '17px', fontWeight: 700, color: '#2C3025', marginBottom: '8px' }}>登录后解锁完整功能</p>
+        <p style={{ fontSize: '17px', fontWeight: 700, color: '#2C3025', marginBottom: '8px' }}>{t('login_prompt.title')}</p>
         <p style={{ fontSize: '13px', color: '#7d6b55', lineHeight: 1.7, marginBottom: '24px' }}>
-          注册撇捺账号，即可联系发帖人、发布招募、记录并复盘你的比赛
+          {t('login_prompt.desc')}
         </p>
         <motion.button
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           onClick={() => navigate('/login')}
           style={{ width: '100%', padding: '12px', background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '20px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.04em', marginBottom: '10px' }}
         >
-          登录 / 注册
+          {t('nav.login')}
         </motion.button>
         <button
           onClick={onClose}
           style={{ background: 'none', border: 'none', fontSize: '12px', color: '#9a8570', cursor: 'pointer', fontFamily: 'inherit', padding: '6px' }}
         >
-          先随便逛逛
+          {t('login_prompt.browse')}
         </button>
       </motion.div>
     </motion.div>

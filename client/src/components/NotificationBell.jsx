@@ -6,10 +6,12 @@ import { useUser } from '../contexts/UserContext';
 import { useMatchInvite } from '../contexts/MatchInviteContext';
 import { supabase } from '../lib/supabase';
 import { formatChineseDate } from '../lib/utils';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // 通知铃铛 + 下拉面板。桌面顶栏和手机顶栏共用。
 // 自带全部通知数据（好友请求 / 招募点赞 / 比赛邀请），所以能独立复用。
 export default function NotificationBell({ isMobile = false }) {
+  const { t } = useLanguage();
   const { receivedRequests, acceptRequest, declineRequest } = useFriend();
   const { received: matchInvites, acceptInvite, declineInvite } = useMatchInvite();
   const { id: selfId } = useUser();
@@ -115,12 +117,12 @@ export default function NotificationBell({ isMobile = false }) {
             }}
           >
             <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(232,228,220,0.35)', letterSpacing: '0.12em', padding: '8px 16px 10px' }}>
-              好友请求
+              {t('notif.friend_requests')}
             </p>
 
             {receivedRequests.length === 0 ? (
               <p style={{ fontSize: '13px', color: 'rgba(232,228,220,0.3)', textAlign: 'center', padding: '12px 16px 16px' }}>
-                暂无新通知
+                {t('notif.empty')}
               </p>
             ) : (
               receivedRequests.map(rid => {
@@ -145,7 +147,7 @@ export default function NotificationBell({ isMobile = false }) {
                           {displayName}
                         </p>
                         <p style={{ fontSize: '11px', color: 'rgba(232,228,220,0.35)' }}>
-                          请求加您为好友
+                          {t('notif.friend_request_sub')}
                         </p>
                       </div>
                     </Link>
@@ -158,7 +160,7 @@ export default function NotificationBell({ isMobile = false }) {
                           fontSize: '11px', color: '#5a8f7a', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
                         }}
                       >
-                        接受
+                        {t('notif.accept')}
                       </button>
                       <button
                         onClick={() => declineRequest(rid)}
@@ -168,7 +170,7 @@ export default function NotificationBell({ isMobile = false }) {
                           fontSize: '11px', color: 'rgba(232,228,220,0.35)', cursor: 'pointer', fontFamily: 'inherit',
                         }}
                       >
-                        拒绝
+                        {t('notif.decline')}
                       </button>
                     </div>
                   </div>
@@ -179,7 +181,7 @@ export default function NotificationBell({ isMobile = false }) {
             {likeNotifs.length > 0 && (
               <>
                 <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(232,228,220,0.35)', letterSpacing: '0.12em', padding: '12px 16px 10px', borderTop: receivedRequests.length > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none', marginTop: receivedRequests.length > 0 ? '4px' : 0 }}>
-                  招募点赞
+                  {t('notif.like_section')}
                 </p>
                 {likeNotifs.slice(0, 5).map(n => {
                   const actor = n.profiles;
@@ -193,7 +195,7 @@ export default function NotificationBell({ isMobile = false }) {
                       </div>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <p style={{ fontSize: '13px', fontWeight: 600, color: '#E8E4DC', marginBottom: '1px' }}>
-                          {actor?.name} 赞了你的招募
+                          {t('notif.liked_post', { name: actor?.name })}
                         </p>
                         {preview && <p style={{ fontSize: '11px', color: 'rgba(232,228,220,0.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview}…</p>}
                       </div>
@@ -203,7 +205,7 @@ export default function NotificationBell({ isMobile = false }) {
                 })}
                 <div style={{ padding: '8px 16px' }}>
                   <button onClick={markLikesRead} style={{ width: '100%', padding: '6px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', fontSize: '11px', color: 'rgba(232,228,220,0.4)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                    标为已读
+                    {t('notif.mark_read')}
                   </button>
                 </div>
               </>
@@ -212,7 +214,7 @@ export default function NotificationBell({ isMobile = false }) {
             {matchInvites.length > 0 && (
               <>
                 <p style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(232,228,220,0.35)', letterSpacing: '0.12em', padding: '12px 16px 10px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '4px' }}>
-                  比赛记录邀请
+                  {t('notif.invite_section')}
                 </p>
                 {matchInvites.map(inv => {
                   const sender = inv.profiles;
@@ -233,14 +235,14 @@ export default function NotificationBell({ isMobile = false }) {
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <p style={{ fontSize: '13px', fontWeight: 600, color: '#E8E4DC', marginBottom: '1px' }}>
-                            {sender?.name} 记录了一场比赛
+                            {t('notif.match_recorded', { name: sender?.name })}
                           </p>
                           <p style={{ fontSize: '11px', color: 'rgba(232,228,220,0.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {sessionInfo?.motion}{sessionInfo?.date ? ` · ${formatChineseDate(sessionInfo.date)}` : ''}
                           </p>
                         </div>
                       </div>
-                      <p style={{ fontSize: '11px', color: 'rgba(232,228,220,0.5)', margin: '0 0 8px' }}>要把这场比赛也记录到你的档案吗？</p>
+                      <p style={{ fontSize: '11px', color: 'rgba(232,228,220,0.5)', margin: '0 0 8px' }}>{t('notif.match_add_prompt')}</p>
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button
                           onClick={() => acceptInvite(inv)}
@@ -250,7 +252,7 @@ export default function NotificationBell({ isMobile = false }) {
                             fontSize: '11px', color: '#5a8f7a', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
                           }}
                         >
-                          加入我的记录
+                          {t('notif.match_add')}
                         </button>
                         <button
                           onClick={() => declineInvite(inv)}
@@ -260,7 +262,7 @@ export default function NotificationBell({ isMobile = false }) {
                             fontSize: '11px', color: 'rgba(232,228,220,0.35)', cursor: 'pointer', fontFamily: 'inherit',
                           }}
                         >
-                          不需要
+                          {t('notif.match_decline')}
                         </button>
                       </div>
                     </div>
