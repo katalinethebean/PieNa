@@ -8,13 +8,14 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { supabase, isConfigured } from '../lib/supabase';
 import { sendMatchInvites } from '../lib/utils';
 
-const SLOT_LABELS = ['一辩', '二辩', '三辩', '四辩'];
-const LOADING_STEPS = [
-  { msg: '正在上传录音...', pct: 15 },
-  { msg: '正在转录音频...', pct: 40 },
-  { msg: '正在分析辩论内容...', pct: 70 },
-  { msg: '正在生成评分报告...', pct: 90 },
-  { msg: '分析完成！', pct: 100 },
+const SLOT_ZH = ['一辩', '二辩', '三辩', '四辩'];
+const SLOT_KEYS = ['pos.slot1', 'pos.slot2', 'pos.slot3', 'pos.slot4'];
+const LOADING_STEP_KEYS = [
+  { msgKey: 'analyze.loading_upload', pct: 15 },
+  { msgKey: 'analyze.loading_transcribe', pct: 40 },
+  { msgKey: 'analyze.loading_analyze', pct: 70 },
+  { msgKey: 'analyze.loading_score', pct: 90 },
+  { msgKey: 'analyze.loading_done', pct: 100 },
 ];
 
 const PROTOTYPE_SCORES = {
@@ -43,6 +44,7 @@ const labelStyle = {
 };
 
 function DebaterSearch({ value, onChange, placeholder, selfUser }) {
+  const { t } = useLanguage();
   const [focused, setFocused] = useState(false);
   const { friends } = useFriend();
   const [friendProfiles, setFriendProfiles] = useState([]);
@@ -124,7 +126,7 @@ function DebaterSearch({ value, onChange, placeholder, selfUser }) {
       </AnimatePresence>
       {focused && query.length > 0 && suggestions.length === 0 && (
         <p style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, fontSize: '10px', color: '#a4b9b5', letterSpacing: '0.04em' }}>
-          未找到注册用户，将以姓名记录
+          {t('analyze.no_registered_user')}
         </p>
       )}
     </div>
@@ -132,6 +134,7 @@ function DebaterSearch({ value, onChange, placeholder, selfUser }) {
 }
 
 function SideToggle({ value, onChange }) {
+  const { t } = useLanguage();
   return (
     <div style={{ display: 'flex', gap: '0', background: 'rgba(217,205,181,0.35)', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '10px', overflow: 'hidden', width: 'fit-content' }}>
       {['正方', '反方'].map(opt => (
@@ -147,7 +150,7 @@ function SideToggle({ value, onChange }) {
             transition: 'all 0.18s', boxShadow: value === opt ? '0 1px 4px rgba(44,48,37,0.08)' : 'none',
           }}
         >
-          {opt}
+          {opt === '正方' ? t('record.pro') : t('record.con')}
         </button>
       ))}
     </div>
@@ -155,12 +158,13 @@ function SideToggle({ value, onChange }) {
 }
 
 function MvpStar({ active, disabled, onClick }) {
+  const { t } = useLanguage();
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      title="佳辩"
+      title={t('analyze.mvp_title')}
       style={{
         flexShrink: 0, width: '36px', height: '36px', display: 'flex',
         alignItems: 'center', justifyContent: 'center',
@@ -216,7 +220,7 @@ export default function Upload() {
   // Derive position from whichever debater slot contains @selfUsername + the side toggle
   function derivePosition() {
     const idx = form.debaters.findIndex(d => selfUsername && d.includes(`@${selfUsername}`));
-    const slot = idx >= 0 ? SLOT_LABELS[idx] : '一辩';
+    const slot = idx >= 0 ? SLOT_ZH[idx] : '一辩';
     return `${form.side}${slot}`;
   }
 
@@ -246,8 +250,8 @@ export default function Upload() {
 
   async function handleTextSubmit(e) {
     e.preventDefault();
-    if (!transcript.trim()) { setError('请输入发言内容或完整逐字稿'); return; }
-    if (!form.motionText.trim()) { setError('请填写辩题'); return; }
+    if (!transcript.trim()) { setError(t('analyze.err_no_transcript')); return; }
+    if (!form.motionText.trim()) { setError(t('analyze.err_no_motion')); return; }
     setError('');
 
     // 走全局异步任务：进度界面由 AnalysisOverlay 统一显示，
@@ -277,18 +281,18 @@ export default function Upload() {
 
   function handleAudioSubmit(e) {
     e.preventDefault();
-    if (!file) { setError('请先选择一段录音或录像文件'); return; }
-    if (credits < 1) { setError('剩余点数不足，暂时不能开始新的分析'); return; }
+    if (!file) { setError(t('analyze.err_no_file')); return; }
+    if (credits < 1) { setError(t('analyze.err_no_credits')); return; }
 
     setLoading(true); setStep(0); setProgress(0);
     const delays = [0, 600, 1300, 2100, 2700];
-    LOADING_STEPS.forEach((s, i) => {
+    LOADING_STEP_KEYS.forEach((s, i) => {
       setTimeout(async () => {
         setStep(i); setProgress(s.pct);
-        if (i === LOADING_STEPS.length - 1) {
+        if (i === LOADING_STEP_KEYS.length - 1) {
           const avg = Object.values(PROTOTYPE_SCORES).reduce((sum, score) => sum + score, 0) / Object.values(PROTOTYPE_SCORES).length;
           const payload = {
-            motion: form.motionText.trim() || '未填写辩题',
+            motion: form.motionText.trim() || t('analyze.motion_unset'),
             date: new Date(form.date).toISOString(),
             role: derivePosition(),
             side: form.side, won,
@@ -299,15 +303,15 @@ export default function Upload() {
             notes: form.notes,
             avg_score: Math.round(avg * 10) / 10,
             ...PROTOTYPE_SCORES,
-            feedback: '这是原型模式下生成的示例点评：你的发言结构清楚，主要论点能够被听众快速抓住。下一步可以把反驳对象说得更具体，并补充一两个可验证的事实或案例来增强论证力度。',
-            transcript: `【原型转录】已接收文件「${file.name}」。后端接入后，这里会显示真实 AI 转录文本。`,
+            feedback: t('analyze.proto_feedback'),
+            transcript: t('analyze.proto_transcript', { file: file.name }),
           };
 
           let id;
           if (isConfigured && selfId) {
             const { data, error: insertError } = await supabase
               .from('sessions').insert({ ...payload, user_id: selfId, language: lang }).select().single();
-            if (insertError) { setLoading(false); setError('保存分析结果失败，请重试'); return; }
+            if (insertError) { setLoading(false); setError(t('analyze.err_save_failed')); return; }
             id = data.id;
             addSession(data);
             await sendMatchInvites(supabase, data.id, form.debaters, selfId, selfUsername);
@@ -334,12 +338,12 @@ export default function Upload() {
         <div style={{ position: 'absolute', inset: '12px', border: '1.5px solid rgba(200,184,154,0.4)', borderBottomColor: '#7d9b96', borderRadius: '50%', animation: 'spin 1.5s linear infinite reverse' }} />
       </div>
       <div style={{ textAlign: 'center' }}>
-        <p style={{ fontSize: '16px', fontWeight: 600, color: '#2C3025', letterSpacing: '0.06em', marginBottom: '6px' }}>{LOADING_STEPS[step].msg}</p>
-        <p style={{ fontSize: '12px', color: '#9a8570', letterSpacing: '0.04em' }}>请稍候，AI 正在处理你的录音</p>
+        <p style={{ fontSize: '16px', fontWeight: 600, color: '#2C3025', letterSpacing: '0.06em', marginBottom: '6px' }}>{t(LOADING_STEP_KEYS[step].msgKey)}</p>
+        <p style={{ fontSize: '12px', color: '#9a8570', letterSpacing: '0.04em' }}>{t('analyze.processing_hint')}</p>
       </div>
       <div style={{ width: '280px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ fontSize: '11px', color: '#9a8570', letterSpacing: '0.04em' }}>处理进度</span>
+          <span style={{ fontSize: '11px', color: '#9a8570', letterSpacing: '0.04em' }}>{t('analyze.processing_progress')}</span>
           <span style={{ fontSize: '11px', color: '#7d9b96', fontWeight: 600 }}>{progress}%</span>
         </div>
         <div style={{ height: '3px', background: 'rgba(217,205,181,0.6)', borderRadius: '2px', overflow: 'hidden' }}>
@@ -347,12 +351,12 @@ export default function Upload() {
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '280px' }}>
-        {LOADING_STEPS.slice(0, -1).map((s, i) => (
+        {LOADING_STEP_KEYS.slice(0, -1).map((s, i) => (
           <motion.div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }} animate={{ opacity: i <= step ? 1 : 0.4 }} transition={{ duration: 0.3 }}>
             <motion.div style={{ width: '18px', height: '18px', flexShrink: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${i <= step ? '#a4b9b5' : 'rgba(200,184,154,0.4)'}` }} animate={{ backgroundColor: i <= step ? '#a4b9b5' : 'rgba(217,205,181,0.5)' }} transition={{ duration: 0.3 }}>
               {i < step && <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="#2C3025" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>}
             </motion.div>
-            <span style={{ fontSize: '12px', color: i <= step ? '#2C3025' : '#9a8570', letterSpacing: '0.02em', transition: 'color 0.3s' }}>{s.msg.replace('...', '')}</span>
+            <span style={{ fontSize: '12px', color: i <= step ? '#2C3025' : '#9a8570', letterSpacing: '0.02em', transition: 'color 0.3s' }}>{t(s.msgKey).replace('...', '')}</span>
           </motion.div>
         ))}
       </div>
@@ -364,15 +368,15 @@ export default function Upload() {
   const conS = parseInt(form.conScore) || 0;
   const hasScores = form.proScore !== '' && form.conScore !== '';
   const won = hasScores ? (form.side === '正方' ? proS > conS : conS > proS) : null;
-  const resultLabel = !hasScores ? '' : won ? '胜' : (proS === conS ? '平' : '负');
+  const resultLabel = !hasScores ? '' : won ? t('profile.won') : (proS === conS ? t('profile.drawn') : t('profile.lost'));
 
   return (
     <div style={{ maxWidth: '620px', margin: '0 auto', padding: '48px 24px' }}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 24 }}>
         <div style={{ marginBottom: '32px' }}>
-          <button type="button" onClick={() => navigate(-1)} style={{ fontSize: '12px', color: '#9a8570', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginBottom: '12px', display: 'block' }}>← 返回</button>
-          <p style={{ fontSize: '12px', color: '#9a8570', letterSpacing: '0.1em', marginBottom: '6px' }}>新建分析</p>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.04em' }}>比赛分析</h1>
+          <button type="button" onClick={() => navigate(-1)} style={{ fontSize: '12px', color: '#9a8570', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginBottom: '12px', display: 'block' }}>← {t('common.back')}</button>
+          <p style={{ fontSize: '12px', color: '#9a8570', letterSpacing: '0.1em', marginBottom: '6px' }}>{t('analyze.new')}</p>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#2C3025', letterSpacing: '0.04em' }}>{t('analyze.title')}</h1>
           <div style={{ width: '32px', height: '2px', backgroundColor: '#a4b9b5', marginTop: '10px', borderRadius: '1px' }} />
         </div>
 
@@ -381,7 +385,7 @@ export default function Upload() {
 
             {/* Mode toggle */}
             <div style={{ display: 'flex', gap: '8px', padding: '4px', background: 'rgba(217,205,181,0.25)', borderRadius: '10px' }}>
-              {[['text', '文字分析'], ['audio', '音频 / 视频']].map(([mode, label]) => (
+              {[['text', t('analyze.mode_text')], ['audio', t('analyze.mode_audio')]].map(([mode, label]) => (
                 <button key={mode} type="button" onClick={() => { setInputMode(mode); setError(''); }}
                   style={{
                     flex: 1, padding: '8px', borderRadius: '7px', fontSize: '13px', fontWeight: 600,
@@ -402,8 +406,8 @@ export default function Upload() {
                 background: 'rgba(255,255,255,0.3)',
               }}>
                 <p style={{ fontSize: '28px', margin: '0 0 12px' }}>🎙️</p>
-                <p style={{ fontSize: '14px', fontWeight: 600, color: '#6b5c45', marginBottom: '4px' }}>功能还在开发中～敬请期待</p>
-                <p style={{ fontSize: '12px', color: '#9a8570', margin: 0 }}>录音 / 录像分析上线前，可以先用文字分析粘贴逐字稿</p>
+                <p style={{ fontSize: '14px', fontWeight: 600, color: '#6b5c45', marginBottom: '4px' }}>{t('analyze.audio_wip_title')}</p>
+                <p style={{ fontSize: '12px', color: '#9a8570', margin: 0 }}>{t('analyze.audio_wip_desc')}</p>
               </div>
             )}
 
@@ -411,20 +415,20 @@ export default function Upload() {
             {inputMode === 'text' && (
               <div>
                 <label style={labelStyle}>
-                  发言内容 <span style={{ color: '#a03030' }}>*</span>
-                  <span style={{ fontWeight: 400, color: '#9a8570', marginLeft: '6px' }}>（粘贴文字转录或稿件原文）</span>
+                  {t('analyze.speech_label')} <span style={{ color: '#a03030' }}>*</span>
+                  <span style={{ fontWeight: 400, color: '#9a8570', marginLeft: '6px' }}>{t('analyze.speech_hint')}</span>
                 </label>
                 <textarea value={transcript} onChange={e => setTranscript(e.target.value)}
-                  placeholder="黏贴文字转录或稿件原文"
+                  placeholder={t('analyze.speech_placeholder')}
                   rows={8} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }} />
               </div>
             )}
 
             {inputMode === 'text' && (
               <div>
-                <label style={labelStyle}>补充信息 <span style={{ fontWeight: 400, color: '#9a8570' }}>（可选）</span></label>
+                <label style={labelStyle}>{t('analyze.context_label')} <span style={{ fontWeight: 400, color: '#9a8570' }}>（{t('common.optional')}）</span></label>
                 <textarea value={aiContext} onChange={e => setAiContext(e.target.value)}
-                  placeholder="详细提示词/问题"
+                  placeholder={t('analyze.context_placeholder')}
                   rows={2} style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }} />
               </div>
             )}
@@ -433,13 +437,13 @@ export default function Upload() {
 
             {/* Date */}
             <div>
-              <label style={labelStyle}>比赛日期 <span style={{ color: '#a03030' }}>*</span></label>
+              <label style={labelStyle}>{t('analyze.match_date')} <span style={{ color: '#a03030' }}>*</span></label>
               <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} style={inputStyle} required />
             </div>
 
             {/* Tournament */}
             <div>
-              <label style={labelStyle}>赛事名称</label>
+              <label style={labelStyle}>{t('analyze.tournament_name')}</label>
               <input
                 value={form.tournament}
                 onChange={e => setForm(f => ({ ...f, tournament: e.target.value }))}
@@ -450,33 +454,33 @@ export default function Upload() {
 
             {/* Motion */}
             <div>
-              <label style={labelStyle}>辩题</label>
+              <label style={labelStyle}>{t('analyze.motion')}</label>
               <input style={inputStyle} placeholder="" value={form.motionText} onChange={e => setForm(f => ({ ...f, motionText: e.target.value }))} />
             </div>
 
             {/* Side */}
             <div>
-              <label style={labelStyle}>我方持方 <span style={{ color: '#a03030' }}>*</span></label>
+              <label style={labelStyle}>{t('analyze.my_side')} <span style={{ color: '#a03030' }}>*</span></label>
               <SideToggle value={form.side} onChange={v => setForm(f => ({ ...f, side: v }))} />
             </div>
 
             {/* Scores */}
             <div>
-              <label style={labelStyle}>比分</label>
+              <label style={labelStyle}>{t('analyze.score')}</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '10px', color: '#9a8570', marginBottom: '4px' }}>正方</p>
+                  <p style={{ fontSize: '10px', color: '#9a8570', marginBottom: '4px' }}>{t('record.pro')}</p>
                   <input type="number" min="0" max="99" value={form.proScore} onChange={e => setForm(f => ({ ...f, proScore: e.target.value }))} placeholder="0" style={{ ...inputStyle, textAlign: 'center', fontSize: '18px', fontWeight: 700 }} />
                 </div>
                 <span style={{ fontSize: '20px', color: '#c8b89a', fontWeight: 300, paddingTop: '20px' }}>–</span>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '10px', color: '#9a8570', marginBottom: '4px' }}>反方</p>
+                  <p style={{ fontSize: '10px', color: '#9a8570', marginBottom: '4px' }}>{t('record.con')}</p>
                   <input type="number" min="0" max="99" value={form.conScore} onChange={e => setForm(f => ({ ...f, conScore: e.target.value }))} placeholder="0" style={{ ...inputStyle, textAlign: 'center', fontSize: '18px', fontWeight: 700 }} />
                 </div>
                 {hasScores && (
                   <div style={{ paddingTop: '20px', flexShrink: 0 }}>
-                    <span style={{ fontSize: '12px', fontWeight: 700, padding: '5px 12px', borderRadius: '20px', color: resultLabel === '胜' ? '#5a8f7a' : resultLabel === '负' ? '#a03030' : '#9a8570', background: resultLabel === '胜' ? 'rgba(90,143,122,0.1)' : resultLabel === '负' ? 'rgba(160,48,48,0.08)' : 'rgba(200,184,154,0.2)', border: `1px solid ${resultLabel === '胜' ? 'rgba(90,143,122,0.25)' : resultLabel === '负' ? 'rgba(160,48,48,0.2)' : 'rgba(200,184,154,0.4)'}` }}>
-                      {form.side} · {resultLabel}
+                    <span style={{ fontSize: '12px', fontWeight: 700, padding: '5px 12px', borderRadius: '20px', color: resultLabel === t('profile.won') ? '#5a8f7a' : resultLabel === t('profile.lost') ? '#a03030' : '#9a8570', background: resultLabel === t('profile.won') ? 'rgba(90,143,122,0.1)' : resultLabel === t('profile.lost') ? 'rgba(160,48,48,0.08)' : 'rgba(200,184,154,0.2)', border: `1px solid ${resultLabel === t('profile.won') ? 'rgba(90,143,122,0.25)' : resultLabel === t('profile.lost') ? 'rgba(160,48,48,0.2)' : 'rgba(200,184,154,0.4)'}` }}>
+                      {form.side === '正方' ? t('record.pro') : t('record.con')} · {resultLabel}
                     </span>
                   </div>
                 )}
@@ -485,17 +489,17 @@ export default function Upload() {
 
             {/* Debaters — my team's 4 */}
             <div>
-              <label style={labelStyle}>我方辩手（输入用户名查找已注册的撇捺用户）</label>
+              <label style={labelStyle}>{t('analyze.my_debaters')}</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {SLOT_LABELS.map((pos, i) => (
+                {SLOT_KEYS.map((posKey, i) => (
                   <div key={i}>
-                    <label style={{ ...labelStyle, fontSize: '9px', color: '#9a8570', marginBottom: '3px' }}>{pos}</label>
+                    <label style={{ ...labelStyle, fontSize: '9px', color: '#9a8570', marginBottom: '3px' }}>{t(posKey)}</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ flex: 1 }}>
                         <DebaterSearch
                           value={form.debaters[i]}
                           onChange={v => setDebater(i, v)}
-                          placeholder={pos}
+                          placeholder={t(posKey)}
                           selfUser={selfUser}
                         />
                       </div>
@@ -512,7 +516,7 @@ export default function Upload() {
 
             {/* Notes */}
             <div>
-              <label style={labelStyle}>备注</label>
+              <label style={labelStyle}>{t('analyze.notes')}</label>
               <textarea
                 value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
@@ -535,7 +539,7 @@ export default function Upload() {
                   whileHover={!loading ? { scale: 1.01 } : {}} whileTap={!loading ? { scale: 0.97, transition: { type: 'spring', stiffness: 500, damping: 25 } } : {}}
                   style={{ width: '100%', padding: '14px', backgroundColor: loading ? 'rgba(44,48,37,0.5)' : '#2C3025', color: '#E8E4DC', border: 'none', fontSize: '14px', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', letterSpacing: '0.1em', borderRadius: '10px' }}
                 >
-                  {loading ? 'AI 分析中…' : '开始分析'}
+                  {loading ? t('analyze.analyzing') : t('analyze.start_analysis')}
                 </motion.button>
 
               </>

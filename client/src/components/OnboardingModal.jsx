@@ -31,8 +31,8 @@ const FEATURES = [
         <path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" />
       </svg>
     ),
-    title: 'AI 复盘评分',
-    desc: '上传或录制你的辩论录音，撇捺会自动转录逐位发言，并从逻辑、论证、配合等维度给出评分与点评。',
+    titleKey: 'onboard.feature_review_title',
+    descKey: 'onboard.feature_review_desc',
   },
   {
     key: 'leaderboard',
@@ -43,8 +43,8 @@ const FEATURES = [
         <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
       </svg>
     ),
-    title: '段位榜排名',
-    desc: '按一辩到四辩的辩位积分，以及总榜，与全站辩手同台竞技。打得越多、表现越好，排名越靠前。',
+    titleKey: 'onboard.feature_leaderboard_title',
+    descKey: 'onboard.feature_leaderboard_desc',
   },
   {
     key: 'discover',
@@ -53,8 +53,8 @@ const FEATURES = [
         <circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
       </svg>
     ),
-    title: '发现与招募',
-    desc: '在「发现」里寻找辩友、浏览招募信息、结识潜在对手，为下一场比赛找到合适的搭档或对阵。',
+    titleKey: 'onboard.feature_discover_title',
+    descKey: 'onboard.feature_discover_desc',
   },
   {
     key: 'social',
@@ -63,8 +63,8 @@ const FEATURES = [
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
       </svg>
     ),
-    title: '人脉与私信',
-    desc: '添加好友、实时私信、组队约辩。公开档案还能被更多辩手看到，扩展你的辩论圈子。',
+    titleKey: 'onboard.feature_social_title',
+    descKey: 'onboard.feature_social_desc',
   },
 ];
 
@@ -193,7 +193,7 @@ export default function OnboardingModal() {
         {forceOpen && (
           <button
             onClick={close}
-            aria-label="关闭"
+            aria-label={t('onboard.close')}
             style={{
               position: 'absolute', top: '16px', right: '16px',
               background: 'transparent', border: 'none', cursor: 'pointer',
@@ -231,8 +231,8 @@ export default function OnboardingModal() {
                 <div style={{ width: '32px', height: '2px', background: '#a4b9b5', margin: '0 auto' }} />
               </div>
               <p style={{ fontSize: '14px', color: '#6b5c45', lineHeight: 1.7, margin: 0 }}>
-                撇捺是属于辩手的练习与社交平台。<br />
-                接下来花一分钟，带你快速了解主要功能。
+                {t('onboard.welcome_sub_1')}<br />
+                {t('onboard.welcome_sub_2')}
               </p>
             </motion.div>
           )}
@@ -255,10 +255,10 @@ export default function OnboardingModal() {
                   {f.icon}
                 </div>
                 <h2 style={{ fontSize: '21px', fontWeight: 800, color: '#2C3025', margin: 0, letterSpacing: '0.04em' }}>
-                  {f.title}
+                  {t(f.titleKey)}
                 </h2>
                 <p style={{ fontSize: '14px', color: '#6b5c45', lineHeight: 1.75, margin: 0, maxWidth: '340px' }}>
-                  {f.desc}
+                  {t(f.descKey)}
                 </p>
               </motion.div>
             );
@@ -274,9 +274,9 @@ export default function OnboardingModal() {
             >
               <div style={{ textAlign: 'center' }}>
                 <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#2C3025', margin: '0 0 6px' }}>
-                  最后一步 · 完善档案
+                  {t('onboard.profile_step_title')}
                 </h2>
-                <p style={{ fontSize: '13px', color: '#9a8570', margin: 0 }}>让其他辩手认识你</p>
+                <p style={{ fontSize: '13px', color: '#9a8570', margin: 0 }}>{t('onboard.profile_step_sub')}</p>
               </div>
 
               {/* Avatar */}
@@ -296,28 +296,28 @@ export default function OnboardingModal() {
                     : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(232,228,220,0.6)" strokeWidth="1.5" strokeLinecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                   }
                 </div>
-                <span style={{ fontSize: '11px', color: '#a4b9b5' }}>点击上传头像（可选）</span>
+                <span style={{ fontSize: '11px', color: '#a4b9b5' }}>{t('onboard.avatar_hint')}</span>
                 <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
               </div>
 
               {/* Name */}
               <div>
-                <label style={labelStyle}>昵称 <span style={{ color: '#a03030' }}>*</span></label>
-                <input style={inputStyle} placeholder="请输入你的昵称" value={name} onChange={e => { setName(e.target.value); setError(''); }} />
+                <label style={labelStyle}>{t('onboard.nickname')} <span style={{ color: '#a03030' }}>*</span></label>
+                <input style={inputStyle} placeholder={t('onboard.nickname_placeholder')} value={name} onChange={e => { setName(e.target.value); setError(''); }} />
               </div>
 
               {/* Team */}
               <div>
-                <label style={labelStyle}>主队</label>
-                <input style={inputStyle} placeholder="学校 / 俱乐部 / 机构" value={team} onChange={e => setTeam(e.target.value)} />
+                <label style={labelStyle}>{t('onboard.team')}</label>
+                <input style={inputStyle} placeholder={t('onboard.team_placeholder')} value={team} onChange={e => setTeam(e.target.value)} />
               </div>
 
               {/* Bio */}
               <div>
-                <label style={labelStyle}>个人简介</label>
+                <label style={labelStyle}>{t('onboard.bio')}</label>
                 <textarea
                   style={{ ...inputStyle, resize: 'none', height: '88px', lineHeight: 1.6 }}
-                  placeholder="介绍一下自己…"
+                  placeholder={t('onboard.bio_placeholder')}
                   value={bio}
                   onChange={e => {
                     const lines = e.target.value.split('\n');
@@ -332,17 +332,17 @@ export default function OnboardingModal() {
                   }}
                 />
                 <div style={{ fontSize: '11px', color: '#a4b9b5', textAlign: 'right', marginTop: '3px' }}>
-                  {[...bio].length}/100 · {bio.split('\n').length}/4行
+                  {t('onboard.char_count', { len: [...bio].length, lines: bio.split('\n').length })}
                 </div>
               </div>
 
               {/* Honors */}
               <div>
-                <label style={labelStyle}>荣誉（最多 5 项）</label>
+                <label style={labelStyle}>{t('onboard.honors')}</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {honors.map((h, i) => (
                     <input key={i} style={{ ...inputStyle, fontSize: '13px' }}
-                      placeholder={`荣誉 ${i + 1}`} value={h}
+                      placeholder={t('onboard.honor_placeholder', { n: i + 1 })} value={h}
                       onChange={e => { const n = [...honors]; n[i] = e.target.value; setHonors(n); }} />
                   ))}
                 </div>
@@ -350,15 +350,15 @@ export default function OnboardingModal() {
 
               {/* WeChat */}
               <div>
-                <label style={labelStyle}>微信号 <span style={{ color: '#a4b9b5', fontWeight: 400 }}>（仅好友可见）</span></label>
-                <input style={inputStyle} placeholder="你的微信号" value={wechat} onChange={e => setWechat(e.target.value)} />
+                <label style={labelStyle}>{t('onboard.wechat')} <span style={{ color: '#a4b9b5', fontWeight: 400 }}>{t('onboard.wechat_hint')}</span></label>
+                <input style={inputStyle} placeholder={t('onboard.wechat_placeholder')} value={wechat} onChange={e => setWechat(e.target.value)} />
               </div>
 
               {/* Public / Private */}
               <div>
-                <label style={labelStyle}>档案可见性</label>
+                <label style={labelStyle}>{t('onboard.visibility')}</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  {[{ val: true, label: '公开', desc: '可被搜索到' }, { val: false, label: '私密', desc: '仅好友可见详情' }].map(({ val, label, desc }) => (
+                  {[{ val: true, label: t('onboard.public_label'), desc: t('onboard.public_desc') }, { val: false, label: t('onboard.private_label'), desc: t('onboard.private_desc') }].map(({ val, label, desc }) => (
                     <motion.div key={String(val)} whileTap={{ scale: 0.97 }} onClick={() => setIsPublic(val)}
                       style={{
                         flex: 1, padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',

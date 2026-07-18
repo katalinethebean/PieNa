@@ -21,6 +21,7 @@ const labelStyle = {
 };
 
 function DebaterSearch({ value, onChange, placeholder, selfUser }) {
+  const { t } = useLanguage();
   const [focused, setFocused] = useState(false);
   const { friends } = useFriend();
   const [friendProfiles, setFriendProfiles] = useState([]);
@@ -49,7 +50,7 @@ function DebaterSearch({ value, onChange, placeholder, selfUser }) {
     : [];
 
   const handleSelect = (d) => {
-    onChange(`@${d.username}  ${d.name}${d.isSelf ? '（我）' : d.team ? `  (${d.team})` : ''}`);
+    onChange(`@${d.username}  ${d.name}${d.isSelf ? t('record.self_tag') : d.team ? `  (${d.team})` : ''}`);
     setFocused(false);
   };
 
@@ -91,7 +92,7 @@ function DebaterSearch({ value, onChange, placeholder, selfUser }) {
                 </div>
                 <div>
                   <p style={{ fontSize: '13px', fontWeight: 600, color: '#2C3025' }}>
-                    {d.name}{d.isSelf && <span style={{ fontSize: '10px', color: '#7d9b96', marginLeft: '5px' }}>（我）</span>}
+                    {d.name}{d.isSelf && <span style={{ fontSize: '10px', color: '#7d9b96', marginLeft: '5px' }}>{t('record.self_tag')}</span>}
                   </p>
                   <p style={{ fontSize: '10px', color: '#9a8570' }}>@{d.username}{d.team ? ` · ${d.team}` : ''}</p>
                 </div>
@@ -102,7 +103,7 @@ function DebaterSearch({ value, onChange, placeholder, selfUser }) {
       </AnimatePresence>
       {focused && query.length > 0 && suggestions.length === 0 && (
         <p style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, fontSize: '10px', color: '#a4b9b5', letterSpacing: '0.04em' }}>
-          未找到注册用户，将以姓名记录
+          {t('analyze.no_registered_user')}
         </p>
       )}
     </div>
@@ -110,6 +111,7 @@ function DebaterSearch({ value, onChange, placeholder, selfUser }) {
 }
 
 function SideToggle({ value, onChange }) {
+  const { t } = useLanguage();
   return (
     <div style={{ display: 'flex', gap: '0', background: 'rgba(217,205,181,0.35)', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '10px', overflow: 'hidden', width: 'fit-content' }}>
       {['正方', '反方'].map(opt => (
@@ -125,7 +127,7 @@ function SideToggle({ value, onChange }) {
             transition: 'all 0.18s', boxShadow: value === opt ? '0 1px 4px rgba(44,48,37,0.08)' : 'none',
           }}
         >
-          {opt}
+          {opt === '正方' ? t('record.pro') : t('record.con')}
         </button>
       ))}
     </div>
@@ -133,12 +135,13 @@ function SideToggle({ value, onChange }) {
 }
 
 function MvpStar({ active, disabled, onClick }) {
+  const { t } = useLanguage();
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      title="佳辩"
+      title={t('analyze.mvp_title')}
       style={{
         flexShrink: 0, width: '36px', height: '36px', display: 'flex',
         alignItems: 'center', justifyContent: 'center',
@@ -198,7 +201,7 @@ export default function RecordMatch() {
   const won = hasScores
     ? (form.side === '正方' ? proS > conS : conS > proS)
     : null;
-  const resultLabel = !hasScores ? '' : won ? '胜' : (proS === conS ? '平' : '负');
+  const resultLabel = !hasScores ? '' : won ? t('profile.won') : (proS === conS ? t('profile.drawn') : t('profile.lost'));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -256,18 +259,18 @@ export default function RecordMatch() {
           <p style={{ fontSize: '13px', color: '#7d6b55', lineHeight: 1.7, marginBottom: '6px' }}>{form.motion}</p>
           {form.tournament && <p style={{ fontSize: '11px', color: '#9a8570', marginBottom: '4px' }}>{form.tournament}</p>}
           <p style={{ fontSize: '12px', color: '#9a8570', marginBottom: '28px' }}>
-            {form.side}{resultLabel ? ` · ${resultLabel}` : ''}{hasScores ? ` · ${form.proScore}–${form.conScore}` : ''}
+            {form.side === '正方' ? t('record.pro') : t('record.con')}{resultLabel ? ` · ${resultLabel}` : ''}{hasScores ? ` · ${form.proScore}–${form.conScore}` : ''}
           </p>
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
             <button
               onClick={() => { setSubmitted(false); setForm({ date: new Date().toISOString().slice(0, 10), tournament: '', motion: '', side: '正方', proScore: '', conScore: '', debaters: ['', '', '', ''], mvpFlags: [false, false, false, false], notes: '' }); }}
               style={{ padding: '10px 20px', background: 'rgba(217,205,181,0.4)', border: '1px solid rgba(200,184,154,0.5)', borderRadius: '20px', fontSize: '13px', color: '#6b5c45', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
-              再记录一场
+              {t('record.record_again')}
             </button>
             <button
               onClick={() => navigate('/me')}
               style={{ padding: '10px 22px', background: '#2C3025', border: 'none', borderRadius: '20px', fontSize: '13px', color: '#E8E4DC', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
-              返回我的档案
+              {t('report.back_to_profile')}
             </button>
           </div>
         </motion.div>
@@ -279,7 +282,7 @@ export default function RecordMatch() {
     <div style={{ maxWidth: '640px', margin: '0 auto', padding: '40px 24px 80px' }}>
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 240, damping: 24 }}>
         <div style={{ marginBottom: '28px' }}>
-          <button type="button" onClick={() => navigate(-1)} style={{ fontSize: '12px', color: '#9a8570', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginBottom: '12px', display: 'block' }}>← 返回</button>
+          <button type="button" onClick={() => navigate(-1)} style={{ fontSize: '12px', color: '#9a8570', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginBottom: '12px', display: 'block' }}>← {t('common.back')}</button>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#2C3025', marginBottom: '4px' }}>{t('record.title')}</h1>
         </div>
 
@@ -326,7 +329,7 @@ export default function RecordMatch() {
               <label style={labelStyle}>{t('report.score')}</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '10px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.04em' }}>正方</p>
+                  <p style={{ fontSize: '10px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.04em' }}>{t('record.pro')}</p>
                   <input
                     type="number" min="0" max="99"
                     value={form.proScore}
@@ -337,7 +340,7 @@ export default function RecordMatch() {
                 </div>
                 <span style={{ fontSize: '20px', color: '#c8b89a', fontWeight: 300, paddingTop: '20px' }}>–</span>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '10px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.04em' }}>反方</p>
+                  <p style={{ fontSize: '10px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.04em' }}>{t('record.con')}</p>
                   <input
                     type="number" min="0" max="99"
                     value={form.conScore}
@@ -350,11 +353,11 @@ export default function RecordMatch() {
                   <div style={{ paddingTop: '20px', flexShrink: 0 }}>
                     <span style={{
                       fontSize: '12px', fontWeight: 700, padding: '5px 12px', borderRadius: '20px',
-                      color: resultLabel === '胜' ? '#5a8f7a' : resultLabel === '负' ? '#a03030' : '#9a8570',
-                      background: resultLabel === '胜' ? 'rgba(90,143,122,0.1)' : resultLabel === '负' ? 'rgba(160,48,48,0.08)' : 'rgba(200,184,154,0.2)',
-                      border: `1px solid ${resultLabel === '胜' ? 'rgba(90,143,122,0.25)' : resultLabel === '负' ? 'rgba(160,48,48,0.2)' : 'rgba(200,184,154,0.4)'}`,
+                      color: resultLabel === t('profile.won') ? '#5a8f7a' : resultLabel === t('profile.lost') ? '#a03030' : '#9a8570',
+                      background: resultLabel === t('profile.won') ? 'rgba(90,143,122,0.1)' : resultLabel === t('profile.lost') ? 'rgba(160,48,48,0.08)' : 'rgba(200,184,154,0.2)',
+                      border: `1px solid ${resultLabel === t('profile.won') ? 'rgba(90,143,122,0.25)' : resultLabel === t('profile.lost') ? 'rgba(160,48,48,0.2)' : 'rgba(200,184,154,0.4)'}`,
                     }}>
-                      {form.side} · {resultLabel}
+                      {form.side === '正方' ? t('record.pro') : t('record.con')} · {resultLabel}
                     </span>
                   </div>
                 )}
@@ -365,15 +368,15 @@ export default function RecordMatch() {
             <div>
               <label style={labelStyle}>{t('record.debaters')}</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {['一辩', '二辩', '三辩', '四辩'].map((pos, i) => (
+                {['pos.slot1', 'pos.slot2', 'pos.slot3', 'pos.slot4'].map((posKey, i) => (
                   <div key={i}>
-                    <label style={{ ...labelStyle, fontSize: '9px', color: '#9a8570', marginBottom: '3px' }}>{pos}</label>
+                    <label style={{ ...labelStyle, fontSize: '9px', color: '#9a8570', marginBottom: '3px' }}>{t(posKey)}</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ flex: 1 }}>
                         <DebaterSearch
                           value={form.debaters[i]}
                           onChange={v => setDebater(i, v)}
-                          placeholder={pos}
+                          placeholder={t(posKey)}
                           selfUser={selfUser}
                         />
                       </div>

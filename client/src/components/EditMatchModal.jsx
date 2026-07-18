@@ -7,6 +7,7 @@ import { sendMatchInvites } from '../lib/utils';
 import { useLanguage } from '../contexts/LanguageContext';
 
 function DebaterSearch({ value, onChange, placeholder, selfUser, inputStyle }) {
+  const { t } = useLanguage();
   const [focused, setFocused] = useState(false);
   const { friends } = useFriend();
   const [friendProfiles, setFriendProfiles] = useState([]);
@@ -28,7 +29,7 @@ function DebaterSearch({ value, onChange, placeholder, selfUser, inputStyle }) {
     : [];
 
   const handleSelect = (d) => {
-    onChange(`@${d.username}  ${d.name}${d.isSelf ? '（我）' : d.team ? `  (${d.team})` : ''}`);
+    onChange(`@${d.username}  ${d.name}${d.isSelf ? t('record.self_tag') : d.team ? `  (${d.team})` : ''}`);
     setFocused(false);
   };
 
@@ -52,7 +53,7 @@ function DebaterSearch({ value, onChange, placeholder, selfUser, inputStyle }) {
                   {d.name.slice(0, 1)}
                 </div>
                 <div>
-                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#2C3025' }}>{d.name}{d.isSelf && <span style={{ fontSize: '10px', color: '#7d9b96', marginLeft: '4px' }}>（我）</span>}</p>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#2C3025' }}>{d.name}{d.isSelf && <span style={{ fontSize: '10px', color: '#7d9b96', marginLeft: '4px' }}>{t('record.self_tag')}</span>}</p>
                   <p style={{ fontSize: '10px', color: '#9a8570' }}>@{d.username}{d.team ? ` · ${d.team}` : ''}</p>
                 </div>
               </div>
@@ -175,7 +176,7 @@ export default function EditMatchModal({ session, onClose, onSaved }) {
                     inputStyle={{ ...inputStyle, fontSize: '13px' }}
                   />
                 </div>
-                <button type="button" title="佳辩" disabled={!form.debaters[i]}
+                <button type="button" title={t('analyze.mvp_title')} disabled={!form.debaters[i]}
                   onClick={() => setForm(f => { const m = [...f.mvpFlags]; m[i] = !m[i]; return { ...f, mvpFlags: m }; })}
                   style={{ flexShrink: 0, width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: form.mvpFlags[i] ? 'rgba(192,122,58,0.12)' : 'transparent', border: `1px solid ${form.mvpFlags[i] ? 'rgba(192,122,58,0.5)' : 'rgba(200,184,154,0.5)'}`, borderRadius: '8px', cursor: form.debaters[i] ? 'pointer' : 'not-allowed', opacity: form.debaters[i] ? 1 : 0.35 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill={form.mvpFlags[i] ? '#c07a3a' : 'none'} stroke={form.mvpFlags[i] ? '#c07a3a' : '#9a8570'} strokeWidth="1.5" strokeLinejoin="round">

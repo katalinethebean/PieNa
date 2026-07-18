@@ -191,16 +191,16 @@ export default function Network() {
 
       {/* Header */}
       <div style={{ position: 'absolute', top: '28px', left: '36px', zIndex: 10, pointerEvents: 'none' }}>
-        <p style={{ fontSize: '10px', color: 'rgba(164,185,181,0.45)', letterSpacing: '0.2em', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase' }}>辩手社区</p>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#E8E4DC', letterSpacing: '0.03em', lineHeight: 1, margin: 0 }}>关系网络</h1>
+        <p style={{ fontSize: '10px', color: 'rgba(164,185,181,0.45)', letterSpacing: '0.2em', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase' }}>{t('network.header_kicker')}</p>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#E8E4DC', letterSpacing: '0.03em', lineHeight: 1, margin: 0 }}>{t('network.header_title')}</h1>
       </div>
 
       {/* Legend */}
       <div style={{ position: 'absolute', top: '28px', right: '36px', zIndex: 10, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {[
-          { col: '#5a8f7a', label: '好友' },
-          { col: '#4a85c5', label: '队友' },
-          { col: '#c05050', label: '密切协作' },
+          { col: '#5a8f7a', label: t('network.legend_friend') },
+          { col: '#4a85c5', label: t('network.legend_teammate') },
+          { col: '#c05050', label: t('network.legend_collab') },
         ].map(({ col, label }) => (
           <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ width: '16px', height: '2px', backgroundColor: col, borderRadius: '1px', opacity: 0.7 }} />
@@ -211,7 +211,7 @@ export default function Network() {
 
       {!panelNode && (
         <p style={{ position: 'absolute', bottom: '28px', left: '50%', transform: 'translateX(-50%)', fontSize: '11px', color: 'rgba(232,228,220,0.2)', letterSpacing: '0.1em', pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 5 }}>
-          点击节点 · 以此人为中心查看关系
+          {t('network.hint')}
         </p>
       )}
 
@@ -372,7 +372,7 @@ export default function Network() {
                           {Math.round(panelNodeData.win_rate * 100)}% <span style={{ color: 'rgba(232,228,220,0.22)' }}>{t('network.win_rate_label')}</span>
                         </span>
                       )}
-                      <span style={{ fontSize: '11px', color: 'rgba(232,228,220,0.35)' }}>{nodeConnCount[panelNodeData.id] ?? 0} 个连结</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(232,228,220,0.35)' }}>{t('network.connections', { count: nodeConnCount[panelNodeData.id] ?? 0 })}</span>
                     </div>
                   </div>
                 </>
@@ -381,28 +381,28 @@ export default function Network() {
             <div style={{ display: 'flex', gap: '7px', flexShrink: 0 }}>
               {panelNodeData.self ? (
                 <Link to="/me" style={{ textDecoration: 'none' }}>
-                  <button style={{ padding: '7px 14px', background: 'rgba(192,122,58,0.12)', border: '1px solid rgba(192,122,58,0.28)', borderRadius: '20px', fontSize: '11px', color: '#c07a3a', cursor: 'pointer', fontFamily: 'inherit' }}>我的档案</button>
+                  <button style={{ padding: '7px 14px', background: 'rgba(192,122,58,0.12)', border: '1px solid rgba(192,122,58,0.28)', borderRadius: '20px', fontSize: '11px', color: '#c07a3a', cursor: 'pointer', fontFamily: 'inherit' }}>{t('network.my_profile')}</button>
                 </Link>
               ) : (
                 <>
                   <Link to={`/profile/${panelNodeData.id}`} style={{ textDecoration: 'none' }}>
                     <button style={{ padding: '7px 12px', background: 'rgba(164,185,181,0.08)', border: '1px solid rgba(164,185,181,0.2)', borderRadius: '20px', fontSize: '11px', color: 'rgba(164,185,181,0.7)', cursor: 'pointer', fontFamily: 'inherit' }}>{t('network.view')}</button>
                   </Link>
-                  {friendStatus(panelNodeData.id) === 'friend' && <button onClick={() => setConfirmingUnfriendId(panelNodeData.id)} style={{ padding: '7px 12px', background: 'rgba(90,143,122,0.12)', border: '1px solid rgba(90,143,122,0.28)', borderRadius: '20px', fontSize: '11px', color: '#5a8f7a', cursor: 'pointer', fontFamily: 'inherit' }}>✓ 好友</button>}
-                  {friendStatus(panelNodeData.id) === 'sent' && <button onClick={() => cancelRequest(panelNodeData.id)} style={{ padding: '7px 12px', background: 'rgba(164,185,181,0.06)', border: '1px solid rgba(164,185,181,0.14)', borderRadius: '20px', fontSize: '11px', color: 'rgba(232,228,220,0.32)', cursor: 'pointer', fontFamily: 'inherit' }}>已发送</button>}
+                  {friendStatus(panelNodeData.id) === 'friend' && <button onClick={() => setConfirmingUnfriendId(panelNodeData.id)} style={{ padding: '7px 12px', background: 'rgba(90,143,122,0.12)', border: '1px solid rgba(90,143,122,0.28)', borderRadius: '20px', fontSize: '11px', color: '#5a8f7a', cursor: 'pointer', fontFamily: 'inherit' }}>{t('network.already_friend')}</button>}
+                  {friendStatus(panelNodeData.id) === 'sent' && <button onClick={() => cancelRequest(panelNodeData.id)} style={{ padding: '7px 12px', background: 'rgba(164,185,181,0.06)', border: '1px solid rgba(164,185,181,0.14)', borderRadius: '20px', fontSize: '11px', color: 'rgba(232,228,220,0.32)', cursor: 'pointer', fontFamily: 'inherit' }}>{t('network.request_sent')}</button>}
                   {friendStatus(panelNodeData.id) === 'received' && <button onClick={() => acceptRequest(panelNodeData.id)} style={{ padding: '7px 12px', background: 'rgba(192,122,58,0.14)', border: '1px solid rgba(192,122,58,0.28)', borderRadius: '20px', fontSize: '11px', color: '#c07a3a', cursor: 'pointer', fontFamily: 'inherit' }}>{t('network.accept')}</button>}
                   {friendStatus(panelNodeData.id) === 'none' && !greetingOpen && (
-                    <button onClick={() => { setGreetingOpen(true); setGreetingDraft(''); }} style={{ padding: '7px 12px', background: 'rgba(164,185,181,0.12)', border: '1px solid rgba(164,185,181,0.28)', borderRadius: '20px', fontSize: '11px', color: '#a4b9b5', cursor: 'pointer', fontFamily: 'inherit' }}>+ 加好友</button>
+                    <button onClick={() => { setGreetingOpen(true); setGreetingDraft(''); }} style={{ padding: '7px 12px', background: 'rgba(164,185,181,0.12)', border: '1px solid rgba(164,185,181,0.28)', borderRadius: '20px', fontSize: '11px', color: '#a4b9b5', cursor: 'pointer', fontFamily: 'inherit' }}>{t('network.add_friend')}</button>
                   )}
                   {friendStatus(panelNodeData.id) === 'none' && greetingOpen && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', minWidth: '150px' }}>
                       <input autoFocus value={greetingDraft} onChange={e => setGreetingDraft(e.target.value.slice(0, 20))}
-                        placeholder="打个招呼（可选）" maxLength={20}
+                        placeholder={t('network.greeting_placeholder')} maxLength={20}
                         onKeyDown={e => { if (e.key === 'Enter') { sendRequest(panelNodeData.id, greetingDraft); setGreetingOpen(false); } if (e.key === 'Escape') setGreetingOpen(false); }}
                         style={{ padding: '5px 8px', border: '1px solid rgba(164,185,181,0.4)', borderRadius: '6px', fontSize: '11px', outline: 'none', fontFamily: 'inherit', background: 'rgba(255,255,255,0.08)', color: '#E8E4DC' }} />
                       <div style={{ display: 'flex', gap: '4px' }}>
                         <button onClick={() => { sendRequest(panelNodeData.id, greetingDraft); setGreetingOpen(false); }} style={{ flex: 1, padding: '4px', fontSize: '10px', fontWeight: 600, background: 'rgba(164,185,181,0.2)', color: '#a4b9b5', border: '1px solid rgba(164,185,181,0.3)', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>{t('common.send')}</button>
-                        <button onClick={() => setGreetingOpen(false)} style={{ padding: '4px 6px', fontSize: '10px', background: 'transparent', color: 'rgba(232,228,220,0.4)', border: '1px solid rgba(232,228,220,0.1)', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>取消</button>
+                        <button onClick={() => setGreetingOpen(false)} style={{ padding: '4px 6px', fontSize: '10px', background: 'transparent', color: 'rgba(232,228,220,0.4)', border: '1px solid rgba(232,228,220,0.1)', borderRadius: '5px', cursor: 'pointer', fontFamily: 'inherit' }}>{t('common.cancel')}</button>
                       </div>
                     </div>
                   )}
@@ -416,9 +416,9 @@ export default function Network() {
 
       {confirmingUnfriendId && (
         <ConfirmModal
-          title="删除好友"
-          message={`确定要删除好友「${nodes.find(n => n.id === confirmingUnfriendId)?.name || ''}」吗？删除后需要重新发送好友请求。`}
-          confirmLabel="删除"
+          title={t('network.delete_friend_title')}
+          message={t('network.delete_friend_msg', { name: nodes.find(n => n.id === confirmingUnfriendId)?.name || '' })}
+          confirmLabel={t('common.delete')}
           danger
           onCancel={() => setConfirmingUnfriendId(null)}
           onConfirm={() => { unfriend(confirmingUnfriendId); setConfirmingUnfriendId(null); }}

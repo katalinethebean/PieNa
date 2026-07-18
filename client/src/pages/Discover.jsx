@@ -117,7 +117,7 @@ function LeaderboardCard() {
       <Link to="/leaderboard" style={{ textDecoration: 'none' }}>
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid rgba(200,184,154,0.3)', textAlign: 'center', fontSize: '12px', color: 'var(--color-sage-dark)', fontWeight: 600, letterSpacing: '0.04em', cursor: 'pointer' }}>
-          查看总榜 →
+          {t('discover.view_leaderboard')}
         </motion.div>
       </Link>
     </div>
@@ -301,9 +301,9 @@ function MyRecruits({ refreshKey, onPostChange }) {
     <>
     {confirmDeleteId && (
       <ConfirmModal
-        title="删除招募帖"
-        message="确定要删除这条招募帖吗？删除后无法恢复。"
-        confirmLabel="删除"
+        title={t('discover.delete_post_title')}
+        message={t('discover.delete_post_msg')}
+        confirmLabel={t('common.delete')}
         danger
         onCancel={() => setConfirmDeleteId(null)}
         onConfirm={() => deletePost(confirmDeleteId)}
@@ -361,7 +361,7 @@ function MyRecruits({ refreshKey, onPostChange }) {
                 <div style={{ position: 'absolute', right: '10px', bottom: '10px', display: 'flex', gap: '6px' }}>
                   <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                     onClick={() => setEditingPost(p)}
-                    title="编辑"
+                    title={t('discover.edit_title')}
                     style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(90,143,122,0.08)', border: '1px solid rgba(90,143,122,0.25)', borderRadius: '7px', cursor: 'pointer', color: '#5a8f7a', padding: 0 }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -377,7 +377,7 @@ function MyRecruits({ refreshKey, onPostChange }) {
                   </motion.button>
                   <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                     onClick={() => setConfirmDeleteId(p.id)}
-                    title="删除"
+                    title={t('discover.delete_title')}
                     style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(160,48,48,0.08)', border: '1px solid rgba(160,48,48,0.25)', borderRadius: '7px', cursor: 'pointer', color: '#a03030', padding: 0 }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
@@ -402,9 +402,10 @@ const STATUS_COLOR = {
   '已截止': '#9a8570',
 };
 
-function TournamentCard({ t }) {
+function TournamentCard({ t: tour }) {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
-  const statusColor = STATUS_COLOR[t.status] || '#9a8570';
+  const statusColor = STATUS_COLOR[tour.status] || '#9a8570';
 
   return (
     <motion.div
@@ -415,14 +416,14 @@ function TournamentCard({ t }) {
     >
       <div style={{ padding: '14px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
-          <p style={{ fontSize: '13px', fontWeight: 700, color: '#2C3025', lineHeight: 1.4, flex: 1 }}>{t.name}</p>
+          <p style={{ fontSize: '13px', fontWeight: 700, color: '#2C3025', lineHeight: 1.4, flex: 1 }}>{tour.name}</p>
           <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '10px', color: statusColor, background: `${statusColor}18`, border: `1px solid ${statusColor}30`, flexShrink: 0 }}>
-            {t.status}
+            {tour.status}
           </span>
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {t.ageGroup && <span style={{ fontSize: '11px', color: '#6b5c45' }}>{t.ageGroup}</span>}
-          {t.date && <><span style={{ color: 'rgba(200,184,154,0.5)', fontSize: '10px' }}>·</span><span style={{ fontSize: '11px', color: '#9a8570' }}>{t.date.replace(/-/g, '/')} · {t.location}</span></>}
+          {tour.ageGroup && <span style={{ fontSize: '11px', color: '#6b5c45' }}>{tour.ageGroup}</span>}
+          {tour.date && <><span style={{ color: 'rgba(200,184,154,0.5)', fontSize: '10px' }}>·</span><span style={{ fontSize: '11px', color: '#9a8570' }}>{tour.date.replace(/-/g, '/')} · {tour.location}</span></>}
         </div>
       </div>
       <AnimatePresence>
@@ -435,17 +436,17 @@ function TournamentCard({ t }) {
             style={{ overflow: 'hidden' }}
           >
             <div style={{ padding: '0 16px 14px', borderTop: '1px solid rgba(200,184,154,0.3)', paddingTop: '12px' }}>
-              {t.format && (
+              {tour.format && (
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(164,185,181,0.15)', border: '1px solid rgba(164,185,181,0.3)', padding: '3px 10px', borderRadius: '20px', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '10px', color: '#7d9b96', fontWeight: 600 }}>{t.format}</span>
+                  <span style={{ fontSize: '10px', color: '#7d9b96', fontWeight: 600 }}>{tour.format}</span>
                 </div>
               )}
-              {t.description && (
-                <p style={{ fontSize: '12px', color: '#6b5c45', lineHeight: 1.75 }}>{t.description}</p>
+              {tour.description && (
+                <p style={{ fontSize: '12px', color: '#6b5c45', lineHeight: 1.75 }}>{tour.description}</p>
               )}
-              {t.deadline && (
+              {tour.deadline && (
                 <p style={{ fontSize: '11px', color: '#9a8570', marginTop: '8px' }}>
-                  报名截止：<span style={{ color: '#6b5c45', fontWeight: 600 }}>{t.deadline}</span>
+                  {t('discover.deadline_label')}<span style={{ color: '#6b5c45', fontWeight: 600 }}>{tour.deadline}</span>
                 </p>
               )}
             </div>
@@ -478,16 +479,17 @@ function EmptyState({ icon, title, sub, action, onAction }) {
 }
 
 function TournamentsTab() {
+  const { t } = useLanguage();
   return (
     <div>
       {MOCK_UPCOMING_TOURNAMENTS.length === 0 ? (
         <EmptyState
           icon="🏆"
-          title="暂无比赛信息"
-          sub="比赛信息由官方账号发布，敬请期待"
+          title={t('discover.no_tournaments_title')}
+          sub={t('discover.no_tournaments_sub')}
         />
       ) : (
-        MOCK_UPCOMING_TOURNAMENTS.map(t => <TournamentCard key={t.id} t={t} />)
+        MOCK_UPCOMING_TOURNAMENTS.map(tour => <TournamentCard key={tour.id} t={tour} />)
       )}
     </div>
   );
@@ -543,7 +545,7 @@ function RecruitModal({ onClose, onPosted }) {
         <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid rgba(200,184,154,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', marginBottom: '2px' }}>{t('recruit.title')}</h2>
-            <p style={{ fontSize: '11px', color: '#7d6b55' }}>发布招募帖，找到你的辩论搭档</p>
+            <p style={{ fontSize: '11px', color: '#7d6b55' }}>{t('discover.post_subtitle')}</p>
           </div>
           <button onClick={onClose} style={{ background: 'rgba(200,184,154,0.3)', border: '1px solid rgba(200,184,154,0.4)', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', fontSize: '13px', color: '#5a4a3a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
@@ -551,11 +553,11 @@ function RecruitModal({ onClose, onPosted }) {
         {submitted ? (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
             <div style={{ fontSize: '36px', marginBottom: '16px' }}>🎉</div>
-            <p style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', marginBottom: '8px' }}>招募帖已发布！</p>
-            <p style={{ fontSize: '13px', color: '#7d6b55', marginBottom: '24px' }}>其他辩手会看到你的招募信息</p>
+            <p style={{ fontSize: '16px', fontWeight: 700, color: '#2C3025', marginBottom: '8px' }}>{t('discover.post_published')}</p>
+            <p style={{ fontSize: '13px', color: '#7d6b55', marginBottom: '24px' }}>{t('discover.others_will_see')}</p>
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onClose}
               style={{ padding: '10px 28px', background: '#2C3025', color: '#E8E4DC', border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-              好的
+              {t('discover.ok')}
             </motion.button>
           </div>
         ) : (
@@ -835,12 +837,13 @@ function TeammatesTab({ onRecruit, refreshKey, guest, onRequireLogin, onPostChan
 }
 
 function ChallengeTab() {
+  const { t } = useLanguage();
   return (
     <EmptyState
       icon="⚔️"
-      title="还没有约战帖"
-      sub="向其他辩手发起约战，约定一场切磋"
-      action="发起约战"
+      title={t('discover.no_challenges_title')}
+      sub={t('discover.no_challenges_sub')}
+      action={t('discover.start_challenge')}
       onAction={() => {}}
     />
   );

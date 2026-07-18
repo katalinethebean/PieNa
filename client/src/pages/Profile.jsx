@@ -13,14 +13,14 @@ import TeamPicker from '../components/TeamPicker';
 import { useIsMobile } from '../lib/useIsMobile';
 
 const SCORE_LABELS = [
-  { key: 'fluency_score', label: '流畅' },
-  { key: 'originality_score', label: '原创' },
-  { key: 'flexibility_score', label: '灵活' },
-  { key: 'targetedness_score', label: '针对' },
-  { key: 'logicality_score', label: '逻辑' },
-  { key: 'effectiveness_score', label: '有效' },
-  { key: 'clarity_score', label: '清晰' },
-  { key: 'appeal_score', label: '吸引' },
+  { key: 'fluency_score', labelKey: 'score.fluency' },
+  { key: 'originality_score', labelKey: 'score.originality' },
+  { key: 'flexibility_score', labelKey: 'score.flexibility' },
+  { key: 'targetedness_score', labelKey: 'score.targetedness' },
+  { key: 'logicality_score', labelKey: 'score.logicality' },
+  { key: 'effectiveness_score', labelKey: 'score.effectiveness' },
+  { key: 'clarity_score', labelKey: 'score.clarity' },
+  { key: 'appeal_score', labelKey: 'score.appeal' },
 ];
 
 const scoreColor = s => s >= 8 ? 'var(--color-success)' : s >= 7 ? 'var(--color-sage-dark)' : '#c07a3a';
@@ -50,13 +50,13 @@ function AnimatedNumber({ value, decimals = 1, style: s }) {
   return <span ref={ref} style={{ ...s, fontVariantNumeric: 'tabular-nums' }}>{value.toFixed(decimals)}</span>;
 }
 
-function avgByDimension(sessions) {
+function avgByDimension(sessions, t) {
   // Average each dimension only over sessions that actually have it — old-rubric
   // sessions (argument/structure/fluency columns) must not drag new dimensions to 0.
-  return SCORE_LABELS.map(({ key, label }) => {
+  return SCORE_LABELS.map(({ key, labelKey }) => {
     const vals = sessions.map(s => s[key]).filter(v => Number.isFinite(v));
     return {
-      subject: label,
+      subject: t(labelKey),
       score: vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0,
       fullMark: 10,
     };
@@ -82,9 +82,9 @@ function FriendButton({ id }) {
       </motion.button>
       {confirmingUnfriend && (
         <ConfirmModal
-          title="删除好友"
-          message="确定要删除这位好友吗？删除后需要重新发送好友请求。"
-          confirmLabel="删除"
+          title={t('profile.delete_friend_title')}
+          message={t('profile.delete_friend_msg')}
+          confirmLabel={t('profile.delete_friend_confirm')}
           danger
           onCancel={() => setConfirmingUnfriend(false)}
           onConfirm={() => { unfriend(id); setConfirmingUnfriend(false); }}
@@ -101,7 +101,7 @@ function FriendButton({ id }) {
   if (hasReceived) return (
     <motion.button whileTap={{ scale: 0.96 }} onClick={() => acceptRequest(id)}
       style={{ ...btnBase, background: 'rgba(192,122,58,0.12)', border: '1px solid rgba(192,122,58,0.3)', color: '#c07a3a' }}>
-      接受好友请求
+      {t('profile.accept_friend_request')}
     </motion.button>
   );
   if (!greetingOpen) return (
@@ -113,7 +113,7 @@ function FriendButton({ id }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '220px' }}>
       <input autoFocus value={greetingDraft} onChange={e => setGreetingDraft(e.target.value.slice(0, 20))}
-        placeholder="打个招呼吧（可选，20字内）" style={inputSt}
+        placeholder={t('profile.greeting_placeholder')} style={inputSt}
         onKeyDown={e => { if (e.key === 'Enter') { sendRequest(id, greetingDraft); setGreetingOpen(false); } if (e.key === 'Escape') setGreetingOpen(false); }} />
       <div style={{ display: 'flex', gap: '6px' }}>
         <motion.button whileTap={{ scale: 0.96 }}
@@ -141,15 +141,15 @@ function SettingsModal({ user, onClose, navigate }) {
   async function changeUsername() {
     const trimmed = newUsername.trim().toLowerCase();
     if (!trimmed) return;
-    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) { setMsg(m => ({ ...m, username: '用户名只能含英文字母、数字和下划线' })); return; }
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) { setMsg(m => ({ ...m, username: { text: t('settings.err_username_chars'), ok: false } })); return; }
     setBusy('username');
     const { data: available } = await supabase.rpc('is_username_available', { p_username: trimmed });
-    if (!available) { setMsg(m => ({ ...m, username: '该用户名已被使用，请换一个' })); setBusy(''); return; }
+    if (!available) { setMsg(m => ({ ...m, username: { text: t('settings.err_username_taken'), ok: false } })); setBusy(''); return; }
     const { error } = await supabase.from('profiles').update({ username: trimmed }).eq('id', user.id);
     setBusy('');
-    if (error) { setMsg(m => ({ ...m, username: '修改失败：' + error.message })); return; }
+    if (error) { setMsg(m => ({ ...m, username: { text: t('settings.err_update_failed', { msg: error.message }), ok: false } })); return; }
     user.setUsername?.(trimmed);
-    setMsg(m => ({ ...m, username: '用户名已更新' }));
+    setMsg(m => ({ ...m, username: { text: t('settings.username_updated'), ok: true } }));
     setNewUsername('');
   }
 
@@ -158,7 +158,7 @@ function SettingsModal({ user, onClose, navigate }) {
     setBusy('email');
     const { error } = await supabase.auth.updateUser({ email: email.trim() });
     setBusy('');
-    setMsg(error ? { email: '修改失败：' + error.message } : { email: '确认邮件已发送，请查收邮箱' });
+    setMsg(error ? { email: { text: t('settings.err_update_failed', { msg: error.message }), ok: false } } : { email: { text: t('settings.email_confirm_sent'), ok: true } });
   }
 
   async function saveWechat() {
@@ -168,7 +168,7 @@ function SettingsModal({ user, onClose, navigate }) {
       await supabase.from('profiles').update({ user_wechat: wechat }).eq('id', user.id);
     }
     setBusy('');
-    setMsg({ wechat: t('settings.saved') });
+    setMsg({ wechat: { text: t('settings.saved'), ok: true } });
   }
 
   async function togglePublic() {
@@ -178,7 +178,7 @@ function SettingsModal({ user, onClose, navigate }) {
     if (isConfigured && user.id) {
       await supabase.from('profiles').update({ is_public: next }).eq('id', user.id);
     }
-    setMsg({ privacy: t('settings.saved') });
+    setMsg({ privacy: { text: t('settings.saved'), ok: true } });
   }
 
   async function logout() {
@@ -198,7 +198,7 @@ function SettingsModal({ user, onClose, navigate }) {
       await supabase.auth.signOut();
       navigate('/');
     } catch {
-      setMsg({ delete: '删除失败，请稍后重试' });
+      setMsg({ delete: { text: t('settings.err_delete_failed'), ok: false } });
       setBusy('');
     }
   }
@@ -238,7 +238,7 @@ function SettingsModal({ user, onClose, navigate }) {
               onChange={e => { setNewUsername(e.target.value); setMsg(m => ({ ...m, username: '' })); }} />
             {saveBtn(t('settings.confirm'), changeUsername, busy === 'username')}
           </div>
-          {msg.username && <span style={feedbackStyle(msg.username === '用户名已更新')}>{msg.username}</span>}
+          {msg.username && <span style={feedbackStyle(msg.username.ok)}>{msg.username.text}</span>}
         </div>
 
         {/* Email */}
@@ -249,7 +249,7 @@ function SettingsModal({ user, onClose, navigate }) {
             <input style={inputStyle} type="email" placeholder={t('settings.email_placeholder')} value={email} onChange={e => { setEmail(e.target.value); setMsg(m => ({ ...m, email: '' })); }} />
             {saveBtn(t('settings.confirm'), changeEmail, busy === 'email')}
           </div>
-          {msg.email && <span style={feedbackStyle(!msg.email.startsWith('修改失败'))}>{msg.email}</span>}
+          {msg.email && <span style={feedbackStyle(msg.email.ok)}>{msg.email.text}</span>}
         </div>
 
         {/* WeChat */}
@@ -259,7 +259,7 @@ function SettingsModal({ user, onClose, navigate }) {
             <input style={inputStyle} placeholder={t('settings.wechat_placeholder')} value={wechat} onChange={e => { setWechat(e.target.value); setMsg(m => ({ ...m, wechat: '' })); }} />
             {saveBtn(t('settings.confirm'), saveWechat, busy === 'wechat')}
           </div>
-          {msg.wechat && <span style={feedbackStyle(true)}>{t('settings.saved')}</span>}
+          {msg.wechat && <span style={feedbackStyle(msg.wechat.ok)}>{msg.wechat.text}</span>}
         </div>
 
         {/* Public/Private */}
@@ -273,7 +273,7 @@ function SettingsModal({ user, onClose, navigate }) {
             </motion.div>
             <span style={{ fontSize: '13px', color: '#6b5c45' }}>{isPublic ? t('settings.public') : t('settings.private')}</span>
           </div>
-          {msg.privacy && <span style={feedbackStyle(true)}>{msg.privacy}</span>}
+          {msg.privacy && <span style={feedbackStyle(msg.privacy.ok)}>{msg.privacy.text}</span>}
         </div>
 
         {/* Logout */}
@@ -307,7 +307,7 @@ function SettingsModal({ user, onClose, navigate }) {
                   {t('profile.cancel')}
                 </motion.button>
               </div>
-              {msg.delete && <span style={feedbackStyle(false)}>{msg.delete}</span>}
+              {msg.delete && <span style={feedbackStyle(msg.delete.ok)}>{msg.delete.text}</span>}
             </div>
           )}
         </div>
@@ -511,7 +511,7 @@ export default function Profile({ self }) {
   const isPrivateStranger = !isSelf && otherLimited;
 
   const sessions = isSelf ? (user.sessions || []) : otherSessions;
-  const radarData = avgByDimension(sessions);
+  const radarData = avgByDimension(sessions, t);
   const friendCount = isSelf ? friends.length : (profile.friend_count ?? 0);
   const winCount = sessions.filter(s => s.won).length;
   const winRate = sessions.length > 0 ? Math.round((winCount / sessions.length) * 100) : 0;
@@ -637,7 +637,7 @@ export default function Profile({ self }) {
                   <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '10px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>{t('profile.team')}</label>
-                      <TeamPicker style={inputStyle} value={draftTeam} onChange={setDraftTeam} placeholder="如：拔萃学院辩论学会" />
+                      <TeamPicker style={inputStyle} value={draftTeam} onChange={setDraftTeam} placeholder={t('profile.team_placeholder')} />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '11px', color: '#9a8570', marginBottom: '4px', letterSpacing: '0.06em' }}>{t('profile.region')}</label>
@@ -669,7 +669,7 @@ export default function Profile({ self }) {
                       }}
                     />
                     <div style={{ fontSize: '11px', color: 'var(--color-sage)', textAlign: 'right', marginTop: '3px' }}>
-                      {[...draftBio].length}/100 · {draftBio.split('\n').length}/4行
+                      {t('profile.char_count', { len: [...draftBio].length, lines: draftBio.split('\n').length })}
                     </div>
                   </div>
                   <div>
@@ -679,7 +679,7 @@ export default function Profile({ self }) {
                         <button type="button"
                           onClick={() => setDraftHonors(h => [...h, ''])}
                           style={{ fontSize: '11px', color: '#7d9b96', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
-                          + 添加荣誉
+                          {t('profile.honor_add')}
                         </button>
                       )}
                     </div>
@@ -688,7 +688,7 @@ export default function Profile({ self }) {
                         <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                           <input style={{ ...inputStyle, fontSize: '13px', flex: 1 }} value={h}
                             onChange={e => { const n = [...draftHonors]; n[i] = e.target.value; setDraftHonors(n); }}
-                            placeholder={`荣誉 ${i + 1}`} />
+                            placeholder={t('profile.honor_placeholder', { n: i + 1 })} />
                           <button type="button"
                             onClick={() => setDraftHonors(h => h.filter((_, j) => j !== i))}
                             style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', color: '#c8b89a', padding: '4px', fontSize: '16px', lineHeight: 1 }}>

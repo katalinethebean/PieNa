@@ -12,36 +12,36 @@ import { useIsMobile } from '../lib/useIsMobile';
 
 // DEFINED 8-dimension creativity rubric (current)
 const SCORE_LABELS = [
-  { key: 'fluency_score',       label: '流畅', full: '流畅性', feedbackKey: 'feedback_fluency' },
-  { key: 'originality_score',   label: '原创', full: '原创性', feedbackKey: 'feedback_originality' },
-  { key: 'flexibility_score',   label: '灵活', full: '灵活性', feedbackKey: 'feedback_flexibility' },
-  { key: 'targetedness_score',  label: '针对', full: '针对性', feedbackKey: 'feedback_targetedness' },
-  { key: 'logicality_score',    label: '逻辑', full: '逻辑性', feedbackKey: 'feedback_logicality' },
-  { key: 'effectiveness_score', label: '有效', full: '有效性', feedbackKey: 'feedback_effectiveness' },
-  { key: 'clarity_score',       label: '清晰', full: '清晰度', feedbackKey: 'feedback_clarity' },
-  { key: 'appeal_score',        label: '吸引', full: '吸引力', feedbackKey: 'feedback_appeal' },
+  { key: 'fluency_score',       labelKey: 'score.fluency', fullKey: 'score.fluency_full', feedbackKey: 'feedback_fluency' },
+  { key: 'originality_score',   labelKey: 'score.originality', fullKey: 'score.originality_full', feedbackKey: 'feedback_originality' },
+  { key: 'flexibility_score',   labelKey: 'score.flexibility', fullKey: 'score.flexibility_full', feedbackKey: 'feedback_flexibility' },
+  { key: 'targetedness_score',  labelKey: 'score.targetedness', fullKey: 'score.targetedness_full', feedbackKey: 'feedback_targetedness' },
+  { key: 'logicality_score',    labelKey: 'score.logicality', fullKey: 'score.logicality_full', feedbackKey: 'feedback_logicality' },
+  { key: 'effectiveness_score', labelKey: 'score.effectiveness', fullKey: 'score.effectiveness_full', feedbackKey: 'feedback_effectiveness' },
+  { key: 'clarity_score',       labelKey: 'score.clarity', fullKey: 'score.clarity_full', feedbackKey: 'feedback_clarity' },
+  { key: 'appeal_score',        labelKey: 'score.appeal', fullKey: 'score.appeal_full', feedbackKey: 'feedback_appeal' },
 ];
 
 // Sessions from the previous 6-dim rubric
 const MID_SCORE_LABELS = [
-  { key: 'logic_score',         label: '逻辑', full: '逻辑', feedbackKey: 'feedback_logic' },
-  { key: 'rebuttal_score',      label: '反驳', full: '反驳', feedbackKey: 'feedback_rebuttal' },
-  { key: 'argumentation_score', label: '论点', full: '论点', feedbackKey: 'feedback_argumentation' },
-  { key: 'delivery_score',      label: '表达', full: '表达', feedbackKey: 'feedback_delivery' },
-  { key: 'teamwork_score',      label: '团队', full: '团队', feedbackKey: 'feedback_teamwork' },
-  { key: 'evidence_score',      label: '论据', full: '论据', feedbackKey: 'feedback_evidence' },
+  { key: 'logic_score',         labelKey: 'report.logic', fullKey: 'report.logic', feedbackKey: 'feedback_logic' },
+  { key: 'rebuttal_score',      labelKey: 'rubric.rebuttal', fullKey: 'rubric.rebuttal', feedbackKey: 'feedback_rebuttal' },
+  { key: 'argumentation_score', labelKey: 'report.argumentation', fullKey: 'report.argumentation', feedbackKey: 'feedback_argumentation' },
+  { key: 'delivery_score',      labelKey: 'rubric.delivery', fullKey: 'rubric.delivery', feedbackKey: 'feedback_delivery' },
+  { key: 'teamwork_score',      labelKey: 'report.teamwork', fullKey: 'report.teamwork', feedbackKey: 'feedback_teamwork' },
+  { key: 'evidence_score',      labelKey: 'rubric.evidence', fullKey: 'rubric.evidence', feedbackKey: 'feedback_evidence' },
 ];
 
 // Sessions analyzed before the rubric change only have these columns (see CLAUDE.md:
 // two rubrics coexist in the sessions table); fall back to them so old reports
 // don't render all-zero scores.
 const OLD_SCORE_LABELS = [
-  { key: 'argument_score',  label: '论点', full: '论点构建' },
-  { key: 'delivery_score',  label: '表达', full: '语言表达' },
-  { key: 'rebuttal_score',  label: '驳论', full: '驳论能力' },
-  { key: 'structure_score', label: '结构', full: '论证结构' },
-  { key: 'evidence_score',  label: '论据', full: '论据质量' },
-  { key: 'fluency_score',   label: '流利', full: '语言流利度' },
+  { key: 'argument_score',  labelKey: 'rubric.argument', fullKey: 'rubric.argument_full' },
+  { key: 'delivery_score',  labelKey: 'rubric.delivery', fullKey: 'rubric.delivery_full' },
+  { key: 'rebuttal_score',  labelKey: 'rubric.rebuttal', fullKey: 'rubric.rebuttal_full' },
+  { key: 'structure_score', labelKey: 'rubric.structure', fullKey: 'rubric.structure_full' },
+  { key: 'evidence_score',  labelKey: 'rubric.evidence', fullKey: 'rubric.evidence_full' },
+  { key: 'fluency_score',   labelKey: 'rubric.fluency', fullKey: 'rubric.fluency_full' },
 ];
 
 const scoreColor = s => s >= 8 ? '#5a8f7a' : s >= 7 ? '#7d9b96' : '#c07a3a';
@@ -140,9 +140,9 @@ export default function Report() {
     return (
       <div style={{ maxWidth: '640px', margin: '80px auto', padding: '24px', textAlign: 'center' }}>
         <div className="glass-card" style={{ padding: '48px 36px' }}>
-          <h1 style={{ fontSize: '22px', color: '#2C3025', marginBottom: '8px' }}>找不到这份记录</h1>
-          <p style={{ fontSize: '13px', color: '#9a8570', lineHeight: 1.7, marginBottom: '24px' }}>这可能是刷新后丢失的原型记录，或链接中的记录 ID 不存在。</p>
-          <Link to="/me" style={{ color: '#7d9b96', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>返回我的档案</Link>
+          <h1 style={{ fontSize: '22px', color: '#2C3025', marginBottom: '8px' }}>{t('report.not_found_title')}</h1>
+          <p style={{ fontSize: '13px', color: '#9a8570', lineHeight: 1.7, marginBottom: '24px' }}>{t('report.not_found_desc')}</p>
+          <Link to="/me" style={{ color: '#7d9b96', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>{t('report.back_to_profile')}</Link>
         </div>
       </div>
     );
@@ -155,7 +155,8 @@ export default function Report() {
   const usesDefined = ['originality_score', 'flexibility_score', 'targetedness_score', 'logicality_score'].some(k => s[k] != null);
   const usesMidRubric = !usesDefined && ['logic_score', 'argumentation_score', 'teamwork_score'].some(k => s[k] != null);
   const usesOldRubric = !usesDefined && !usesMidRubric && ['argument_score', 'structure_score'].some(k => s[k] != null);
-  const scoreLabels = usesMidRubric ? MID_SCORE_LABELS : usesOldRubric ? OLD_SCORE_LABELS : SCORE_LABELS;
+  const scoreLabels = (usesMidRubric ? MID_SCORE_LABELS : usesOldRubric ? OLD_SCORE_LABELS : SCORE_LABELS)
+    .map(m => ({ ...m, label: t(m.labelKey), full: t(m.fullKey) }));
   const radarData = scoreLabels.map(({ key, label }) => ({ subject: label, score: s[key] ?? 0, fullMark: 10 }));
   const debaters = (s.debaters || []).filter(Boolean);
   const won = s.won;
@@ -201,12 +202,12 @@ export default function Report() {
         {/* Top bar */}
         <motion.div variants={itemVariant} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '40px', marginBottom: '24px' }}>
           <Link to="/me" style={{ fontSize: '11px', color: '#9a8570', textDecoration: 'none', letterSpacing: '0.08em', fontWeight: 600 }}>
-            ← 返回我的档案
+            ← {t('report.back_to_profile')}
           </Link>
           <div style={{ display: 'flex', gap: '16px' }}>
             <button onClick={() => setEditing(true)} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: '#9a8570', fontSize: '12px', fontFamily: 'inherit', padding: 0 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              编辑
+              {t('report.edit')}
             </button>
             <button onClick={() => setDeleting(true)} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: '#a03030', fontSize: '12px', fontFamily: 'inherit', padding: 0 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/></svg>
@@ -224,7 +225,7 @@ export default function Report() {
             {formatChineseDate(s.date) && <span style={pillStyle}>{formatChineseDate(s.date)}</span>}
             {s.score && (
               <span style={{ ...pillStyle, color: resultColor, borderColor: won === true ? 'rgba(90,143,122,0.35)' : won === false ? 'rgba(160,48,48,0.3)' : pillStyle.border, fontWeight: 700 }}>
-                {won === true ? '胜 ' : won === false ? '负 ' : ''}{s.score}
+                {won === true ? t('profile.won') + ' ' : won === false ? t('profile.lost') + ' ' : ''}{s.score}
               </span>
             )}
           </div>
@@ -234,7 +235,7 @@ export default function Report() {
         {hasAnalysis && (
           <motion.div variants={itemVariant} style={{ marginBottom: '20px', display: 'flex', alignItems: 'baseline', gap: '8px' }}>
             <AnimatedNumber value={s.avg_score} decimals={1} style={{ fontSize: '44px', fontWeight: 800, color: scoreColor(s.avg_score), lineHeight: 1, letterSpacing: '-0.02em' }} />
-            <span style={{ fontSize: '13px', color: '#9a8570' }}>/ 10 综合评分</span>
+            <span style={{ fontSize: '13px', color: '#9a8570' }}>/ 10 {t('report.overall_score')}</span>
           </motion.div>
         )}
 
@@ -245,7 +246,7 @@ export default function Report() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {debaters.length > 0 && (
                 <div className="glass-card" style={{ padding: '20px' }}>
-                  <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '12px' }}>上场辩手</p>
+                  <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '12px' }}>{t('report.debaters')}</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {debaters.map((d, i) => {
                       const isMvp = s.mvp_flags?.[s.debaters.indexOf(d)];
@@ -259,7 +260,7 @@ export default function Report() {
                           {isMvp && (
                             <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: '#c07a3a', fontWeight: 700 }}>
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="#c07a3a"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                              佳辩
+                              {t('report.mvp')}
                             </span>
                           )}
                         </div>
@@ -270,7 +271,7 @@ export default function Report() {
               )}
               {s.notes && (
                 <div className="glass-card" style={{ padding: '20px' }}>
-                  <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '10px' }}>备注</p>
+                  <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '10px' }}>{t('report.notes_label')}</p>
                   <p style={{ fontSize: '13px', color: '#6b5c45', lineHeight: '1.8', margin: 0 }}>{s.notes}</p>
                 </div>
               )}
@@ -304,7 +305,7 @@ export default function Report() {
           <>
             {debaters.length > 0 && (
               <motion.div variants={itemVariant} style={{ marginBottom: '20px' }}>
-                <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '12px' }}>上场辩手</p>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '12px' }}>{t('report.debaters')}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {debaters.map((d, i) => {
                     const isMvp = s.mvp_flags?.[s.debaters.indexOf(d)];
@@ -318,7 +319,7 @@ export default function Report() {
                         {isMvp && (
                           <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#c07a3a', fontWeight: 700 }}>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="#c07a3a"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                            佳辩
+                            {t('report.mvp')}
                           </span>
                         )}
                       </div>
@@ -329,7 +330,7 @@ export default function Report() {
             )}
             {s.notes && (
               <motion.div variants={itemVariant}>
-                <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '10px' }}>备注</p>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: '#9a8570', letterSpacing: '0.1em', marginBottom: '10px' }}>{t('report.notes_label')}</p>
                 <p style={{ fontSize: '13px', color: '#6b5c45', lineHeight: '1.8', margin: 0 }}>{s.notes}</p>
               </motion.div>
             )}

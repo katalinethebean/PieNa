@@ -65,6 +65,7 @@ function Divider() {
 }
 
 function MoreMenu({ otherId, onDelete }) {
+  const { t } = useLanguage();
   const { blockedIds, convoSettings, blockUser, unblockUser, clearChat, deleteChat, saveNote } = useChat();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState('main');
@@ -120,26 +121,26 @@ function MoreMenu({ otherId, onDelete }) {
           {mode === 'main' && (
             <>
               <MenuBtn onClick={() => { setNoteDraft(currentNote); setMode('note'); }}>
-                备注{currentNote ? `（${currentNote}）` : ''}
+                {t('chat.note_menu')}{currentNote ? `（${currentNote}）` : ''}
               </MenuBtn>
               <Divider />
-              <MenuBtn onClick={() => setMode('confirmClear')}>清空聊天记录</MenuBtn>
+              <MenuBtn onClick={() => setMode('confirmClear')}>{t('chat.clear_history')}</MenuBtn>
               <Divider />
               <MenuBtn onClick={async () => { isBlocked ? await unblockUser(otherId) : await blockUser(otherId); close(); }}>
-                {isBlocked ? '取消拉黑' : '拉黑'}
+                {isBlocked ? t('chat.unblock') : t('chat.block')}
               </MenuBtn>
-              <MenuBtn onClick={() => setMode('confirmDelete')} danger>删除对话</MenuBtn>
+              <MenuBtn onClick={() => setMode('confirmDelete')} danger>{t('chat.delete_conversation')}</MenuBtn>
             </>
           )}
 
           {mode === 'note' && (
             <div style={subStyle}>
-              <p style={subLabel}>备注名（仅自己可见，最多 20 字）</p>
+              <p style={subLabel}>{t('chat.note_label')}</p>
               <input
                 value={noteDraft}
                 onChange={e => setNoteDraft(e.target.value)}
                 maxLength={20}
-                placeholder="给对方起个备注…"
+                placeholder={t('chat.note_placeholder')}
                 autoFocus
                 onKeyDown={e => {
                   if (e.key === 'Enter') { saveNote(otherId, noteDraft.trim()); close(); }
@@ -153,28 +154,28 @@ function MoreMenu({ otherId, onDelete }) {
                 }}
               />
               <div style={actionRow}>
-                <button style={btnPrimary(false)} onClick={() => { saveNote(otherId, noteDraft.trim()); close(); }}>保存</button>
-                <button style={btnGhost} onClick={close}>取消</button>
+                <button style={btnPrimary(false)} onClick={() => { saveNote(otherId, noteDraft.trim()); close(); }}>{t('chat.save')}</button>
+                <button style={btnGhost} onClick={close}>{t('chat.cancel')}</button>
               </div>
             </div>
           )}
 
           {mode === 'confirmClear' && (
             <div style={subStyle}>
-              <p style={subLabel}>清空后记录仅在你这端消失，对方仍可看到。</p>
+              <p style={subLabel}>{t('chat.confirm_clear_desc')}</p>
               <div style={actionRow}>
-                <button style={btnPrimary(true)} onClick={async () => { await clearChat(otherId); close(); }}>确认清空</button>
-                <button style={btnGhost} onClick={() => setMode('main')}>取消</button>
+                <button style={btnPrimary(true)} onClick={async () => { await clearChat(otherId); close(); }}>{t('chat.confirm_clear')}</button>
+                <button style={btnGhost} onClick={() => setMode('main')}>{t('chat.cancel')}</button>
               </div>
             </div>
           )}
 
           {mode === 'confirmDelete' && (
             <div style={subStyle}>
-              <p style={subLabel}>对话从列表消失，对方再次发消息后重新出现。</p>
+              <p style={subLabel}>{t('chat.confirm_delete_desc')}</p>
               <div style={actionRow}>
-                <button style={btnPrimary(true)} onClick={async () => { await deleteChat(otherId); close(); onDelete(); }}>确认删除</button>
-                <button style={btnGhost} onClick={() => setMode('main')}>取消</button>
+                <button style={btnPrimary(true)} onClick={async () => { await deleteChat(otherId); close(); onDelete(); }}>{t('chat.confirm_delete')}</button>
+                <button style={btnGhost} onClick={() => setMode('main')}>{t('chat.cancel')}</button>
               </div>
             </div>
           )}
@@ -321,7 +322,7 @@ function ChatThread({ otherId, showBack }) {
 
     if (error) {
       setMessages(prev => prev.filter(m => m.id !== tempId));
-      setSendError('发送失败，请重试');
+      setSendError(t('chat.send_failed'));
       setDraft(trimmed);
       return;
     }
@@ -342,7 +343,7 @@ function ChatThread({ otherId, showBack }) {
         {showBack && (
           <button
             onClick={() => navigate('/chat')}
-            aria-label="返回"
+            aria-label={t('chat.back')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', marginLeft: '-4px', color: '#2C3025', display: 'flex', alignItems: 'center', lineHeight: 0, flexShrink: 0 }}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -364,7 +365,7 @@ function ChatThread({ otherId, showBack }) {
             fontSize: '11px', color: '#c07a3a', background: 'rgba(192,122,58,0.1)',
             padding: '2px 8px', borderRadius: '10px', flexShrink: 0,
           }}>
-            已拉黑
+            {t('chat.user_blocked')}
           </span>
         )}
         <MoreMenu otherId={otherId} onDelete={() => navigate('/chat')} />
@@ -432,7 +433,7 @@ function ChatThread({ otherId, showBack }) {
             </motion.button>
           </div>
         ) : (
-          <p style={{ fontSize: '12px', color: '#c8b89a', textAlign: 'center', margin: 0 }}>你们已不是好友，无法发送新消息</p>
+          <p style={{ fontSize: '12px', color: '#c8b89a', textAlign: 'center', margin: 0 }}>{t('chat.no_longer_friends')}</p>
         )}
         {sendError && <p style={{ fontSize: '11px', color: '#a03030', marginTop: '6px', marginBottom: 0 }}>{sendError}</p>}
       </div>

@@ -57,13 +57,14 @@ const NAV_DEFS = [
 const spring = { type: 'spring', stiffness: 400, damping: 28 };
 
 function OnboardingButton() {
+  const { t } = useLanguage();
   return (
     <motion.button
       onClick={() => window.dispatchEvent(new Event(OPEN_ONBOARDING_EVENT))}
       whileHover={{ scale: 1.1, color: 'rgba(232,228,220,0.9)' }}
       whileTap={{ scale: 0.9 }}
-      aria-label="新手教程"
-      title="新手教程"
+      aria-label={t('nav.onboarding_tour')}
+      title={t('nav.onboarding_tour')}
       style={{
         background: 'none', border: 'none', cursor: 'pointer', padding: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
